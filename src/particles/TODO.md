@@ -1,0 +1,11 @@
+- boundary UI
+- spawn area
+- resize viz on browser window resize
+- glitch where boundary disapears when smoothing == 0
+- glitch with one particle not moving / interacting with others
+- react frame
+- project website
+- boundary / sim presets
+
+- "island of stability" viz
+- elastic vs pseudo-elastic viz
