@@ -76,7 +76,7 @@ export class Driver {
     },
     shapes: [
       { ...DEFAULT_SHAPE },
-      { type: ShapeType.SOLID, params: [0.5, 0, 0.2] },
+      { type: ShapeType.SOLID, params: [0.5, 0, 0.3] },
     ],
   };
   constructor(public container: HTMLElement) {
