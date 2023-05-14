@@ -1,5 +1,5 @@
 {
-  "name": "reference-impl",
+  "name": "savetheuniverse-client",
   "private": true,
   "version": "0.0.0",
   "type": "module",
@@ -25,9 +25,12 @@
     "vite": "^4.3.5"
   },
   "dependencies": {
+    "@mdx-js/rollup": "^2.3.0",
     "lil-gui": "^0.18.1",
     "pixi.js": "^7.2.4",
     "react": "^18.2.0",
-    "react-dom": "^18.2.0"
+    "react-dom": "^18.2.0",
+    "rehype-mathjax": "^4.0.2",
+    "remark-math": "^5.1.1"
   }
 }

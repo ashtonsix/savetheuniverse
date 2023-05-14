@@ -17,6 +17,13 @@ function updateDisplay(gui: GUI, ...controllers: string[]) {
   }
 }
 
+const shapes = [
+  { type: ShapeType.SOLID, params: [-0.6, 0, 0.3] },
+  // { type: ShapeType.SOLID, params: [0.1, 0.1, 0.4] },
+  // { type: ShapeType.SOLID, params: [0.4, -0.2, 0.2] },
+  // { type: ShapeType.HOLE, params: [0.4, -0.2, 0.05] },
+];
+
 export class Driver {
   core: Core;
   boundaryArea = 0;
@@ -74,10 +81,7 @@ export class Driver {
     addShape: () => {
       // this.boundary.shapes.push({ ...DEFAULT_SHAPE });
     },
-    shapes: [
-      { ...DEFAULT_SHAPE },
-      { type: ShapeType.SOLID, params: [0.5, 0, 0.3] },
-    ],
+    shapes: shapes,
   };
   constructor(public container: HTMLElement) {
     this.gui.root = new GUI({ container });
@@ -93,6 +97,7 @@ export class Driver {
       "frames per second",
       [1, 2, 3, 4, 5, 6, 10, 12, 15, 20, 30, 60]
     );
+    timeControl.add(this.timeControl, "step");
     timeControl.add(this.timeControl, "play / pause");
 
     this.gui.particles = this.gui.root.addFolder("Particles");
@@ -126,6 +131,9 @@ export class Driver {
     boundary.onFinishChange(this.updateBoundary.bind(this));
     boundary.add(this.boundary, "smoothing", 0, 0.1);
     boundary.add(this.boundary, "addShape");
+  }
+  destroy() {
+    this.gui.root.destroy();
   }
   countToDensity(value?: number) {
     const p = this.particles;

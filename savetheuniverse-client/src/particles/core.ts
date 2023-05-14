@@ -37,6 +37,11 @@ export class Core {
     this.particleCollisionDetector = new ParticleDetector(this);
     driver.init(this);
   }
+  destroy() {
+    this.ticker.destroy();
+    this.particleViz.destroy();
+    this.container.innerHTML = "";
+  }
   updateParticleRadius(particleRadius: number) {
     this.particles.r = particleRadius;
     this.particleCollisionDetector.resize();
@@ -44,6 +49,7 @@ export class Core {
     this.boundaryCollisionDetector.index();
     this.particleViz.draw();
   }
+  // for updating particle positions / velocities and creating / destroying particles
   updateParticles(
     newCount: number | undefined,
     fn: (startCount: number, endCount: number) => void

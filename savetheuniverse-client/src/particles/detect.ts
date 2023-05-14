@@ -123,10 +123,13 @@ export class ParticleDetector extends GridDetector {
       for (let yd = -1; yd <= 1; yd++) {
         let yi = ((y + yd + gl) % gl) * gl;
         for (let xd = -1; xd <= 1; xd++) {
+          // this is the "hottest" loop of the simulation, these lines of code run
+          // more than any other
           let xi = (x + xd + gl) % gl;
           let cell = (yi + xi) * ca;
           /**
-           * for these lines of code, multiple if statements are faster than a loop
+           * here, multiple if statements are faster than another inner loop; this
+           * optimisation is a variation of Duff's tool
            *
            * less-than predicate prevents:
            *
@@ -137,6 +140,7 @@ export class ParticleDetector extends GridDetector {
           if (i < g[cell + 1]) callback(i, g[cell + 1]);
           if (i < g[cell + 2]) callback(i, g[cell + 2]);
           if (i < g[cell + 3]) callback(i, g[cell + 3]);
+          if (!g[cell + 4]) continue; // uncommon to have >3 particles in a cell
           if (i < g[cell + 4]) callback(i, g[cell + 4]);
           if (i < g[cell + 5]) callback(i, g[cell + 5]);
           if (i < g[cell + 6]) callback(i, g[cell + 6]);

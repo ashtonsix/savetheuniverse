@@ -26,7 +26,7 @@ export class BoundaryViz {
           +(sdf(x + l, y - l) > 0) +
           +(sdf(x + l, y + l) > 0);
         const v = [0, 255, 255, 255, 24][inside];
-        // const v = ((distance(x, y) % 255) + 255) % 255;
+        // const v = (((sdf(x, y) * 200) % 128) + 128) % 128;
         img[i * 4 + 0] = v;
         img[i * 4 + 1] = v;
         img[i * 4 + 2] = v;
@@ -64,6 +64,9 @@ export class ParticleViz {
     this.spriteContainer = new PIXI.ParticleContainer(65536, options);
 
     this.app.stage.addChild(this.spriteContainer);
+  }
+  destroy() {
+    this.app.destroy();
   }
   draw() {
     const scale = Math.max(this.app.screen.width, this.app.screen.height) / 2;

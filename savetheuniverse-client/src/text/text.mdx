@@ -1,0 +1,95 @@
+import { ParticleSimulation } from "./ParticleSimulation";
+export const title = "Let Us Save the Universe!";
+export const subtitle =
+  "Challenging the validity of the second law of thermodynamics, conservation of momentum, and time-reversibility at scales imperceptible to current measurement techniques";
+export const byline = [
+  { label: "Author", value: "Ashton Six" },
+  { label: "Updated", value: "May 14, 2023" },
+];
+
+<div className="[grid-column-start:1] [grid-column-end:text-start] justify-self-end">
+	<nav className="toc">
+
+    ### Contents
+
+    - [Introduction](#introduction)
+    - [Pseudo-momentum](#pseudo-momentum)
+    - [Model refinement](#refinement)
+    - [Scaling up](#scaling)
+    - [Questions for further research](#questions)
+
+  </nav>
+</div>
+
+<div id="introduction">
+
+Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.
+
+- **Introducing pseudo-momentum.** We consider the link between momentum conservation and the second law. We argue they depend upon each other, and violating one law inevitably violates the other. We propose an alternative to momentum, 'pseudo-momentum', whose conservation symmetry, as demonstrated by initial experiments, promotes spontaneous self-organization in closed systems, inverting the 'arrow of time'.
+- **Model refinement.** We build on the pseudo-momentum conservation principle. We refine our model and develop a more sophisticated simulation capable of emulating a quantum oscillator, that we claim is equivalent to an electron. By replicating seminal experiments, such as the double-slit experiment, we affirm the simulation's compatibility with special relativity and quantum mechanics.
+- **Scaling up.** We test the model's capability by simulating progressively larger entities, ultimately replicating simple molecules like water and methane. We present the computational techniques that make such large-scale simulations possible.
+- **Questions for further research.** We present radical hypotheses for new physics and explore potential future directions for this research. We discuss the project's philosophical and practical ramifications.
+
+</div>
+
+<h2 id="motivation">Motivation</h2>
+
+It is not energy but energy gradients, such as the difference between hot and cold, that makes work possible. At the most basic level, the second law of thermodynamics states
+
+<h2 id="part-one">Introducing pseudo-momentum</h2>
+
+All particles travel along straight line paths at constant velocity, until they collide with the boundary when they are scattered elastically, or with another particle when they are scattered pseudo-elastically. When the pseudo-elasticisty coefficient $E = 1$, pseudo-elastic collisions are equivalent to elastic collisions. All particles have equal mass. It acts as an ideal gas simulation when $E = 1$, and as a dynamical billiards simulation when $n = 1$. The particle-particle collision equation is like so:
+
+$$
+\displaylines{
+	\mathbf{J} = \frac{(1 + E)(\mathbf{x}_1 - \mathbf{x}_2)}{2} \frac{\langle \mathbf{v}_1 - \mathbf{v}_2, \mathbf{x}_1 - \mathbf{x}_2\rangle}{\langle \mathbf{x}_1 - \mathbf{x}_2, \mathbf{x}_1 - \mathbf{x}_2\rangle}, \\
+	{\color{blue}S = \frac{\|\mathbf{v}_1\| + \|\mathbf{v}_2\|}{\|\mathbf{v}_1 - \mathbf{J}\| + \|\mathbf{v}_2 + \mathbf{J}\|}}, \\
+	\mathbf{v}'_1 = {\color{blue}S} (\mathbf{v}_1 - \mathbf{J}), \\
+	\mathbf{v}'_2 = {\color{blue}S} (\mathbf{v}_2 + \mathbf{J})
+}
+$$
+
+<figure className="[grid-column:middle] relative aspect-video">
+  <ParticleSimulation />
+</figure>
+
+It conserves $x = x$, see:
+
+{
+// ### Part One
+
+// Brief introduction to the video's topic
+// Mention the aim of the video: to explore the possibility of reversing the 'arrow of time' and saving the universe
+// I. Why the Second Law of Thermodynamics is Terrible
+
+// Explanation of the Second Law of Thermodynamics
+// Consequences of the law: increasing entropy and the eventual heat death of the universe
+// Discuss the impact of the law on energy resources and the environment
+// II. Proof of the Second Law of Thermodynamics Based on Related Axioms
+
+// Introduce the axioms: conservation of kinetic energy, reversible physics, and conservation of information
+// Explain how these axioms support the Second Law of Thermodynamics
+// Discuss the implications of these axioms on our understanding of time and the universe
+// III. Disproving the Axioms: Reversing the 'Arrow of Time'
+
+// Discuss the need to disprove the axioms in order to challenge the Second Law of Thermodynamics
+// Explore various theories and ideas that attempt to disprove or modify the axioms
+// IV. The Strength of the Axioms and the Challenge of Disproving Them
+
+// Explain the strong support for the axioms in the field of physics (e.g., success in quantum mechanics, Noether's theorem, etc.)
+// Discuss the difficulty and challenges of disproving or modifying these axioms
+// V. A Seemingly Counterintuitive Example: The Formation of Our Solar System
+
+// Describe the process of the solar system's formation and how it appears to increase order
+// Explain that the net increase in disorder is due to the conversion of kinetic energy to thermal energy during the process
+// VI. Imagining an Alternative Universe with Self-Ordering Dynamics
+
+// Propose a hypothetical world with alternative physics that takes self-ordering dynamics into account
+// Show a simulation of particles sticking together, creating an ordered entity in this alternative world
+// Discuss the implications of such a world and how it challenges our understanding of the Second Law of Thermodynamics
+// Conclusion:
+
+// Summarize the main points of the video
+// Emphasize the importance of continually questioning and exploring scientific laws and theories
+// Encourage viewers to take inspiration from the solar system and continue the quest to save the universe
+}
