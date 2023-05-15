@@ -7,7 +7,6 @@ import {
 } from "../common/field";
 import { Core } from "./core";
 
-const DEFAULT_SHAPE = { type: ShapeType.SOLID, params: [0, 0, 0.5] };
 const { random, cos, sin, PI } = Math;
 
 function updateDisplay(gui: GUI, ...controllers: string[]) {
@@ -18,7 +17,7 @@ function updateDisplay(gui: GUI, ...controllers: string[]) {
 }
 
 const shapes = [
-  { type: ShapeType.SOLID, params: [-0.6, 0, 0.3] },
+  { type: ShapeType.SOLID, params: [-0.3, 0, 0.5] },
   // { type: ShapeType.SOLID, params: [0.1, 0.1, 0.4] },
   // { type: ShapeType.SOLID, params: [0.4, -0.2, 0.2] },
   // { type: ShapeType.HOLE, params: [0.4, -0.2, 0.05] },

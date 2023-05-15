@@ -49,8 +49,13 @@
     @apply mb-0;
   }
 
-  .prose p {
+  .prose p,
+  .prose .math-display {
     @apply mb-4;
+  }
+
+  .prose figure {
+    @apply mb-8;
   }
 
   .toc {

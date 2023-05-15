@@ -10,6 +10,7 @@
 - boundary / sim presets
 - fullscreen option
 - log(radius) & log(step size)
+- use -1 to indicate empty cells in cell grid, to avoid ambiguity with particle at i=0
 
 - "island of stability" viz
 - elastic vs pseudo-elastic viz
@@ -21,3 +22,5 @@
 - create repository
 
 - find a way to describe "pseudo-momentum" equations besides conservation symmetry (not quite accurate)
+
+- deployment: https://lightrains.com/blogs/deploy-aws-ec2-using-github-actions/
