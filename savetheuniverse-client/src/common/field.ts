@@ -7,40 +7,32 @@
  * such as loop unrolling.
  */
 
-export enum ShapeType {
-  SOLID,
-  HOLE,
-}
-
 const distance = (cx: number, cy: number, r: number) =>
   `(((x - ${cx}) ** 2 + (y - ${cy}) ** 2) ** 0.5 - ${r})`;
 const union = (distances: string[], k: number) => {
   if (distances.length === 0) return "";
   if (distances.length === 1) return distances[0];
+  if (k === 0) return `Math.min(${distances.join(", ")})`;
   const d = distances.map((d) => `2 ** (-${d} / ${k})`).join(" + ");
-  return `(-log2(${d}) * ${k})`;
+  return `(-Math.log2(${d}) * ${k})`;
 };
-const subtraction = (a: string, b: string, k: number) => {
+const subtraction = (a: string, b: string) => {
   if (!a && !b) return "";
   if (!b) return a;
   if (!a) return "-" + b;
-  return `log2(2 ** (${a} / ${k}) + 2 ** (-${b} / ${k}))`;
+  // smoothmax seems to lead to perculiar glitches
+  return `Math.max(${a}, -${b})`;
 };
 
 export function distanceFunctionFactory(
-  shapes: { type: ShapeType; params: number[] }[],
+  solid: number[][],
+  hole: number[][],
   smoothness: number
 ) {
-  const solid: number[][] = [];
-  const hole: number[][] = [];
-  for (const shape of shapes) {
-    if (shape.type === ShapeType.SOLID) solid.push(shape.params);
-    if (shape.type === ShapeType.HOLE) hole.push(shape.params);
-  }
   return new Function(
     "x",
     "y",
-    "const log2 = Math.log2; return " +
+    "return " +
       subtraction(
         union(
           solid.map(([cx, cy, r]) => distance(cx, cy, r)),
@@ -49,8 +41,7 @@ export function distanceFunctionFactory(
         union(
           hole.map(([cx, cy, r]) => distance(cx, cy, r)),
           smoothness
-        ),
-        smoothness
+        )
       ) || "0"
   ) as (x: number, y: number) => number;
 }

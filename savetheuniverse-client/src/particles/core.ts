@@ -39,6 +39,7 @@ export class Core {
   }
   destroy() {
     this.ticker.destroy();
+    this.boundaryViz.destroy();
     this.particleViz.destroy();
     this.container.innerHTML = "";
   }

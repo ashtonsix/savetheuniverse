@@ -1,4 +1,5 @@
 import { ParticleSimulation } from "./ParticleSimulation";
+import { Figure } from "./Figure";
 export const title = "Let Us Save the Universe!";
 export const subtitle =
   "Challenging the validity of the second law of thermodynamics, conservation of momentum, and time-reversibility at scales imperceptible to current measurement techniques";
@@ -23,14 +24,38 @@ export const byline = [
 
 <div id="introduction">
 
-It is not energy but energy gradients, such as the difference between hot and cold, that makes work possible. At the most basic level, the second law of thermodynamics states. Arrow of time
+It is not energy but energy gradients, such as the difference between hot and cold, that makes work possible. Pellentesque habitant morbi tristique senectus et netus et malesuada fames ac turpis egestas. Sed at felis sit amet sem aliquet ultrices. Fusce ut placerat ex. Vestibulum sit amet orci id risus finibus feugiat sed in dolor.
 
-- **Defining pseudo-momentum.** We demonstrate that the conservation of pseudo-momentum promotes spontaneous self-organization within closed systems. We elucidate the link between pseudo-momentum, momentum and the second law of thermodynamics, and how the adoption of pseudo-momentum disrupts them.
-- **Model refinement.** We build on the pseudo-momentum conservation principle. We refine our model and develop a more sophisticated simulation capable of emulating a quantum oscillator, that we claim is equivalent to an electron. By replicating seminal experiments, such as the double-slit experiment, we affirm the simulation's compatibility with special relativity and quantum mechanics.
-- **Scaling up.** We test the model's capability by simulating progressively larger entities, ultimately replicating simple molecules like water and methane. We present the computational techniques that make such large-scale simulations possible.
-- **Questions for further research.** We present radical hypotheses for new physics and explore potential future directions for this research. We discuss the project's philosophical and practical ramifications.
+Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vestibulum faucibus convallis lorem id tincidunt. Morbi ullamcorper auctor orci, eget luctus lectus mattis non. Sed dapibus condimentum mauris, a pulvinar leo auctor non.
 
-Inspiration for this project comes from the dynamics of Artificial Neural Networks and General Systems Theory
+- **Nulla nec tincidunt nisi.** Morbi id risus in elit vehicula lacinia aliquam sit amet enim lorem donec id convallis mi suspendisse potenti.
+- **Phasellus at gravida.** Sapien, nec feugiat urna sed posuere risus a finibus sollicitudin gravida semper dui ut eleifend. Maecenas ac elit vel velit lacinia cursus non non nunc.
+- **Quisque mollis.** Iaculis ligula sed malesuada interdum ante sed consequat fusce sollicitudin diam eget est scelerisque, id fringilla sapien malesuada.
+
+Proin pellentesque dictum metus non consequat. Ut ac dolor in urna faucibus cursus et non erat. Sed tincidunt turpis id nisl posuere, sit amet mattis tortor tincidunt. Nam at tellus at justo aliquam porttitor id eget lacus. Vivamus sed ex elit. Cras aliquet vestibulum commodo. Sed fringilla sem et libero ultrices interdum. Morbi eleifend, urna sit amet egestas auctor, dolor lacus interdum ex, vitae molestie massa mauris at elit. Sed pretium dapibus tortor, et sollicitudin purus aliquam ut. Phasellus eu justo malesuada, tincidunt risus non, pellentesque mi. Vestibulum posuere varius ligula, eu tincidunt mi rutrum et. Sed ullamcorper tortor non est tincidunt viverra.
+
+{
+// It is not energy but energy gradients, such as the difference between hot and cold, that makes work possible. So as hot and cold mix together
+
+// At the most basic level, the second law of thermodynamics states. Arrow of time
+
+// Accompanied by a corresponding increase in
+
+// The evidence that this law is inviolable is tremendously strong
+
+// Too terrible to accept
+
+// We must exhaust all possible avenues of inquiry
+
+// To give hope to those who dream of a distant and bright future.
+
+// - **Defining pseudo-momentum.** We demonstrate that the conservation of pseudo-momentum promotes spontaneous self-organization within closed systems. We elucidate the link between pseudo-momentum, momentum and the second law of thermodynamics, and how the adoption of pseudo-momentum disrupts them.
+// - **Model refinement.** We build on the pseudo-momentum conservation principle. We refine our model and develop a more sophisticated simulation capable of emulating a quantum oscillator, that we claim is equivalent to an electron. By replicating seminal experiments, such as the double-slit experiment, we affirm the simulation's compatibility with special relativity and quantum mechanics.
+// - **Scaling up.** We test the model's capability by simulating progressively larger entities, ultimately replicating simple molecules like water and methane. We present the computational techniques that make such large-scale simulations possible.
+// - **Questions for further research.** We present radical hypotheses for new physics and explore potential future directions for this research. We discuss the project's philosophical and practical ramifications.
+
+// Inspiration for this project comes from the dynamics of Artificial Neural Networks and General Systems Theory
+}
 
 </div>
 
@@ -55,13 +80,13 @@ where $\mathbf{x}$ and $\mathbf{v}$ denote position and velocity respectively, $
 
 We encourage readers to interact with the simulation and observe the effect of reducing the pseudo-elasticity:
 
-<figure className="[grid-column:middle] relative aspect-video">
+<Figure>
   <ParticleSimulation />
-</figure>
+</Figure>
 
-For $E \lt 1$, particles' velocities align, exhibiting emergent order. This simulation permits a reduction of disorder within a closed system, unlike physical processes that only produce a superficial reduction of disorder (such as the formation of our solar system). This is because kinetic energy is not converted into internal energy.
+For $E \lt 1$, particles' velocities align, exhibiting emergent order within the closed system of our simulation. That's unlike physical processes that only produce a superficial reduction of disorder (such as the formation of our solar system). The difference in behaviour is primarily because kinetic energy is not converted into internal energy within the simulation.
 
-With or without ${\color{blue}S}$, the direction of total momentum remains invariant. For $E = 1$, the following conservation symmetries are observed:
+With or without ${\color{blue}S}$, the direction of total (pseudo-)momentum remains invariant. For $E = 1$, the following conservation symmetries are observed:
 
 $$
 \displaylines {
@@ -70,9 +95,14 @@ $$
 }
 $$
 
-where $\mathbf{p}$ is (pseudo-)momentum. Classical physics loses symmetry $\|\mathbf{p}_1\| + \|\mathbf{p}_2\| = \|\mathbf{p}'_1\| + \|\mathbf{p}'_2\|$ for $E \neq 1$. However, the inclusion of ${\color{blue}S}$ retains it, leading us to define pseudo-momentum as this conserved quantity. In adopting pseudo-momentum, we forfeit the conservation of momentum $\mathbf{p}_1 + \mathbf{p}_2 = \mathbf{p}'_1 + \mathbf{p}'_2$ and time-reversibility for $E \neq 1$. Nevertheless, this sacrifice is necessary in our quest to challenge the second law of thermodynamics.
+where $\mathbf{p}$ is (pseudo-)momentum. Classical physics loses symmetry $\|\mathbf{p}_1\| + \|\mathbf{p}_2\| = \|\mathbf{p}'_1\| + \|\mathbf{p}'_2\|$ for $E \neq 1$. However, the inclusion of ${\color{blue}S}$ retains it, leading us to define pseudo-momentum as this conserved quantity. In adopting pseudo-momentum, we forfeit the conservation of momentum $\mathbf{p}_1 + \mathbf{p}_2 = \mathbf{p}'_1 + \mathbf{p}'_2$ for $E \neq 1$. Nevertheless, this sacrifice is necessary in our quest to challenge the second law of thermodynamics.
 
 <h2 id="understanding-disorder">Understanding disorder</h2>
+{
+  // time-reversibility present as theme in both sub-sections
+  // size of configuration space - Boltzmann
+  // file sizes - Kolmogorov
+}
 
 {
 // ### Part One

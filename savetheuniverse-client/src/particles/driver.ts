@@ -1,13 +1,12 @@
 import GUI, { Controller } from "lil-gui";
 import {
-  ShapeType,
   distanceFunctionFactory,
   estimateArea,
   sampleInside,
 } from "../common/field";
 import { Core } from "./core";
 
-const { random, cos, sin, PI } = Math;
+const { random, floor, max, cos, sin, PI, E } = Math;
 
 function updateDisplay(gui: GUI, ...controllers: string[]) {
   let set = new Set(controllers);
@@ -16,12 +15,19 @@ function updateDisplay(gui: GUI, ...controllers: string[]) {
   }
 }
 
-const shapes = [
-  { type: ShapeType.SOLID, params: [-0.3, 0, 0.5] },
-  // { type: ShapeType.SOLID, params: [0.1, 0.1, 0.4] },
-  // { type: ShapeType.SOLID, params: [0.4, -0.2, 0.2] },
-  // { type: ShapeType.HOLE, params: [0.4, -0.2, 0.05] },
-];
+const generateValve = () => {
+  const b = [] as [boolean, number, number, number][];
+  let x = -0.9;
+  let y = 0;
+  let r = 0.1;
+  for (let j = 0; j < 19; j++) {
+    b.push([true, x, y, r * 0.8]);
+    b.push([false, x + r * 1.3, y, r * 0.25]);
+    x += r;
+    y += r * (j % 2 || -1);
+  }
+  return b;
+};
 
 export class Driver {
   core: Core;
@@ -30,8 +36,8 @@ export class Driver {
   guic: { [key: string]: Controller } = {};
   timeControl = {
     "iters per frame": 10,
+    "log(step size)": -6,
     "frames per second": 60,
-    "frame step size": 0.001,
     step: () => {
       this.core.frame();
     },
@@ -41,9 +47,9 @@ export class Driver {
   };
   particles = {
     "pseudo-elasticity": 1,
-    radius: 0.01,
+    "log(radius)": -4.25,
     count: 0,
-    density: 0.35,
+    density: 0.4,
     reset: () => {
       const b = this.core.boundary;
       const { n, r, x_x, x_y, v_x, v_y } = this.core.particles;
@@ -76,11 +82,30 @@ export class Driver {
     },
   };
   boundary = {
-    smoothing: 0.01,
-    addShape: () => {
-      // this.boundary.shapes.push({ ...DEFAULT_SHAPE });
+    smoothing: 0,
+    shapeCount: 0,
+    "add shape": () => {
+      const all = this.boundary.shapes;
+      const last = all[all.length - 1];
+      const shape = last
+        ? this.addBoundaryShape(
+            true,
+            max(0.1, last.r - 0.1),
+            last.cx + 0.3,
+            last.cy + 0.1
+          )
+        : this.addBoundaryShape(true, -0.3, 0, 0.5);
+      this.updateBoundary();
+      shape.gui.onFinishChange(this.updateBoundary.bind(this));
     },
-    shapes: shapes,
+    shapes: [] as {
+      solid: boolean;
+      cx: number;
+      cy: number;
+      r: number;
+      gui: GUI;
+      "remove shape": () => void;
+    }[],
   };
   constructor(public container: HTMLElement) {
     this.gui.root = new GUI({ container });
@@ -90,7 +115,7 @@ export class Driver {
     const timeControl = this.gui.timeControl;
     timeControl.onChange(this.updateTimeControl.bind(this));
     timeControl.add(this.timeControl, "iters per frame", 1, 50, 1);
-    timeControl.add(this.timeControl, "frame step size", 0.0002, 0.002);
+    timeControl.add(this.timeControl, "log(step size)", -9, -5);
     timeControl.add(
       this.timeControl,
       "frames per second",
@@ -102,8 +127,8 @@ export class Driver {
     this.gui.particles = this.gui.root.addFolder("Particles");
     const particles = this.gui.particles;
     particles.onChange(this.updateParticles.bind(this));
-    particles.add(this.particles, "pseudo-elasticity", 0, 1.5, 0.01);
-    particles.add(this.particles, "radius", 0.001, 0.1).onChange(() => {
+    particles.add(this.particles, "pseudo-elasticity", 0, 1.5);
+    particles.add(this.particles, "log(radius)", -7, -3).onChange(() => {
       this.particles.count = this.densityToCount();
       this.guic.particleCount.max(this.densityToCount(1));
       updateDisplay(this.gui.particles, "count");
@@ -127,46 +152,76 @@ export class Driver {
 
     this.gui.boundary = this.gui.root.addFolder("Boundary");
     const boundary = this.gui.boundary;
+    boundary.close();
     boundary.onFinishChange(this.updateBoundary.bind(this));
     boundary.add(this.boundary, "smoothing", 0, 0.1);
-    boundary.add(this.boundary, "addShape");
+    boundary.add(this.boundary, "add shape");
+    this.boundary["add shape"]();
+    // for (const [solid, cx, cy, r] of generateValve()) {
+    //   this.addBoundaryShape(solid, cx, cy, r);
+    // }
   }
   destroy() {
     this.gui.root.destroy();
   }
+  addBoundaryShape(solid: boolean, cx: number, cy: number, r: number) {
+    const shapes = this.boundary.shapes;
+    const shape = {
+      gui: this.gui.boundary.addFolder(`shape ${++this.boundary.shapeCount}`),
+      solid,
+      r,
+      cx,
+      cy,
+      "remove shape": () => {
+        shape.gui.destroy();
+        shapes.splice(shapes.indexOf(shape), 1);
+        this.updateBoundary();
+      },
+    };
+    shape.gui.add(shape, "solid");
+    shape.gui.add(shape, "cx", -1, 1);
+    shape.gui.add(shape, "cy", -1, 1);
+    shape.gui.add(shape, "r", 0, 1);
+    shape.gui.add(shape, "remove shape");
+    shapes.push(shape);
+    return shape;
+  }
   countToDensity(value?: number) {
     const p = this.particles;
     value = value || p.count;
-    const particleArea = p.radius * p.radius * Math.PI;
+    const r = E ** p["log(radius)"];
+    const particleArea = r * r * PI;
     return (particleArea * value) / this.boundaryArea;
   }
   densityToCount(value?: number) {
     const p = this.particles;
     value = value || p.density;
-    const particleArea = p.radius * p.radius * Math.PI;
-    return Math.floor((this.boundaryArea * value) / particleArea);
+    const r = E ** p["log(radius)"];
+    const particleArea = r * r * PI;
+    return floor((this.boundaryArea * value) / particleArea);
   }
   init(core: Core) {
     this.core = core;
     this.updateTimeControl();
     this.updateBoundary();
     const p = this.particles;
-    const particleArea = p.radius * p.radius * Math.PI;
-    p.count = Math.floor((this.boundaryArea * p.density) / particleArea);
+    const r = E ** p["log(radius)"];
+    const particleArea = r * r * PI;
+    p.count = floor((this.boundaryArea * p.density) / particleArea);
     for (let c of this.gui.particles.controllers) c.updateDisplay();
     this.updateParticles();
   }
   updateTimeControl() {
     const tc = this.timeControl;
-    const iterStepSize = tc["frame step size"] / tc["iters per frame"];
-    this.core.ticker.interval = Math.floor(60 / tc["frames per second"]);
+    const iterStepSize = E ** tc["log(step size)"] / tc["iters per frame"];
+    this.core.ticker.interval = floor(60 / tc["frames per second"]);
     this.core.simulationStepSize = iterStepSize;
     this.core.simulationStepsPerFrame = tc["iters per frame"];
   }
   updateParticles() {
     const p = this.particles;
     this.core.particles.E = p["pseudo-elasticity"];
-    this.core.updateParticleRadius(p.radius);
+    this.core.updateParticleRadius(E ** p["log(radius)"]);
     this.core.updateParticles(p.count, (i: number, n: number) => {
       const { r, x_x, x_y, v_x, v_y } = this.core.particles;
       sampleInside(
@@ -176,16 +231,23 @@ export class Driver {
         (x: number, y: number, j: number) => {
           x_x[i + j] = x;
           x_y[i + j] = y;
-          let d = Math.random() * Math.PI * 2;
-          v_x[i + j] = Math.cos(d);
-          v_y[i + j] = Math.sin(d);
+          let d = random() * PI * 2;
+          v_x[i + j] = cos(d);
+          v_y[i + j] = sin(d);
         }
       );
     });
   }
   updateBoundary() {
+    if (!this.core) return;
     const b = this.boundary;
-    const sdf = distanceFunctionFactory(b.shapes, b.smoothing);
+    const solid: number[][] = [];
+    const hole: number[][] = [];
+    for (const s of b.shapes) {
+      if (s.solid) solid.push([s.cx, s.cy, s.r]);
+      else hole.push([s.cx, s.cy, s.r]);
+    }
+    const sdf = distanceFunctionFactory(solid, hole, b.smoothing);
     this.core.updateBoundary(sdf);
     this.boundaryArea = estimateArea(sdf);
     if (this.particles.count) this.particles.density = this.countToDensity();

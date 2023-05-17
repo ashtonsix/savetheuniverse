@@ -2,36 +2,65 @@ import * as PIXI from "pixi.js";
 import Canvas from "../common/canvas";
 import { Core } from "./core";
 
+const { floor, abs, min, max, atan2 } = Math;
+
 export class BoundaryViz {
   canvas: Canvas;
   container: HTMLDivElement;
+  resizeObserver: ResizeObserver;
   constructor(public core: Core, public outerContainer: HTMLElement) {
     this.container = document.createElement("div");
     this.container.className = "absolute inset-0";
     this.outerContainer.appendChild(this.container);
     this.canvas = new Canvas(this.container, 1);
+    this.resizeObserver = new ResizeObserver(() => {
+      this.canvas.resize();
+      this.draw();
+    });
+    this.resizeObserver.observe(this.container);
+  }
+  destroy() {
+    this.resizeObserver.disconnect();
   }
   draw() {
     const sdf = this.core.boundary;
     const { height: h, width: w } = this.canvas;
+    const l = max(w, h);
+    const linv = 1 / l;
 
     this.canvas.draw((img: Uint8ClampedArray) => {
-      for (let i = 0; i < h * w; i++) {
-        const l = 1 / Math.max(w, h);
-        const x = ((i % w) - w / 2) * l * 2;
-        const y = (Math.floor(i / w) - h / 2) * l * 2;
-        const inside =
-          +(sdf(x - l, y - l) > 0) +
-          +(sdf(x - l, y + l) > 0) +
-          +(sdf(x + l, y - l) > 0) +
-          +(sdf(x + l, y + l) > 0);
-        const v = [0, 255, 255, 255, 24][inside];
-        // const v = (((sdf(x, y) * 200) % 128) + 128) % 128;
-        img[i * 4 + 0] = v;
-        img[i * 4 + 1] = v;
-        img[i * 4 + 2] = v;
-        img[i * 4 + 3] = 255;
+      for (let yi = 0; yi < h; yi++) {
+        for (let xi = 0; xi < w; xi++) {
+          const x = (xi - w / 2) * linv * 2;
+          const y = (yi - h / 2) * linv * 2;
+          const inside =
+            +(sdf(x - linv, y - linv) > 0) +
+            +(sdf(x - linv, y + linv) > 0) +
+            +(sdf(x + linv, y - linv) > 0) +
+            +(sdf(x + linv, y + linv) > 0);
+          const v = [0, 255, 255, 255, 24][inside];
+          // const v = (((sdf(x, y) * 200) % 128) + 128) % 128;
+          if (inside === 0 || inside === 4) {
+            // optimise marching squares with inspiration from ray marching
+            // no need to resample the sdf for every pixel
+            const d = floor(abs(sdf(x, y) * l * 0.5) - 1);
+            const n = xi + min(w - xi, d);
+            for (; xi < n; xi++) {
+              const i = yi * w + xi;
+              img[i * 4 + 0] = v;
+              img[i * 4 + 1] = v;
+              img[i * 4 + 2] = v;
+              img[i * 4 + 3] = 255;
+            }
+          }
+          const i = yi * w + xi;
+          img[i * 4 + 0] = v;
+          img[i * 4 + 1] = v;
+          img[i * 4 + 2] = v;
+          img[i * 4 + 3] = 255;
+        }
       }
+      for (let i = 0; i < h * w; i++) {}
     });
   }
 }
@@ -41,6 +70,7 @@ export class ParticleViz {
   spriteContainer: PIXI.ParticleContainer;
   sprites: PIXI.Sprite[] = [];
   container: HTMLDivElement;
+  resizeObserver: ResizeObserver;
   constructor(public core: Core, public outerContainer: HTMLElement) {
     this.container = document.createElement("div");
     this.container.className = "absolute inset-0";
@@ -64,12 +94,15 @@ export class ParticleViz {
     this.spriteContainer = new PIXI.ParticleContainer(65536, options);
 
     this.app.stage.addChild(this.spriteContainer);
+    this.resizeObserver = new ResizeObserver(() => this.draw());
+    this.resizeObserver.observe(this.container);
   }
   destroy() {
+    this.resizeObserver.disconnect();
     this.app.destroy();
   }
   draw() {
-    const scale = Math.max(this.app.screen.width, this.app.screen.height) / 2;
+    const scale = max(this.app.screen.width, this.app.screen.height) / 2;
     const biasX = this.app.screen.width / 2;
     const biasY = this.app.screen.height / 2;
     const { n, r, x_x, x_y, v_y, v_x } = this.core.particles;
@@ -93,7 +126,7 @@ export class ParticleViz {
       sprite.y = x_y[i] * scale + biasY;
       sprite.width = spriteLength;
       sprite.height = spriteLength;
-      sprite.rotation = Math.atan2(v_y[i], v_x[i]);
+      sprite.rotation = atan2(v_y[i], v_x[i]);
     }
     PIXI.Ticker.shared.update(performance.now());
     this.app.renderer.render(this.app.stage);
