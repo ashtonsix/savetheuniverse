@@ -8,6 +8,7 @@ const App = () => {
     <main>
       <header className="layout pt-12 mb-8">
         <h1 className="relative text-5xl font-bold mb-2">
+          <div className="absolute inline-block -left-32 h-12 w-12 bg-[#f4763d]"></div>
           <div className="absolute inline-block -left-16 h-12 w-12 bg-[#4d9fef]"></div>
           {Text.title}
         </h1>

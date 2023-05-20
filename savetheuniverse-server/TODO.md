@@ -1,0 +1,6 @@
+- shaders to files
+- output to ffmpeg
+- setup ffmpeg server
+- reproducible installation on vast.ai
+- add CUDA
+- add cellgrid program
