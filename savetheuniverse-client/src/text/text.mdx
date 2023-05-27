@@ -1,11 +1,11 @@
-import { ParticleSimulation } from "./ParticleSimulation";
+import { ParticleToy } from "./ParticleToy";
 import { Figure } from "./Figure";
 export const title = "Let Us Save the Universe!";
 export const subtitle =
-  "Challenging the validity of the second law of thermodynamics, conservation of momentum, and time-reversibility at scales imperceptible to current measurement techniques";
+  "Challenging the validity of the second law of thermodynamics at scales imperceptible to current measurement techniques";
 export const byline = [
   { label: "Author", value: "Ashton Six" },
-  { label: "Updated", value: "May 15, 2023" },
+  { label: "Updated", value: "May 27, 2023" },
 ];
 
 <div className="[grid-column-start:1] [grid-column-end:text-start] justify-self-end">
@@ -15,8 +15,11 @@ export const byline = [
 
     - [Introduction](#introduction)
     - [Defining pseudo-momentum](#pseudo-momentum)
-    - [Model refinement](#refinement)
+    - [Understanding disorder](#understanding-disorder)
+    - [Designing the simulation](#simulation)
+    - [Modelling an electron](#electron-model)
     - [Scaling up](#scaling)
+    - [Experiments](#experiments)
     - [Questions for further research](#questions)
 
   </nav>
@@ -24,46 +27,21 @@ export const byline = [
 
 <div id="introduction">
 
-It is not energy but energy gradients, such as the difference between hot and cold, that makes work possible. Pellentesque habitant morbi tristique senectus et netus et malesuada fames ac turpis egestas. Sed at felis sit amet sem aliquet ultrices. Fusce ut placerat ex. Vestibulum sit amet orci id risus finibus feugiat sed in dolor.
+Across centuries of testing, from scales galactic to quantum, the second law of thermodynamics has stood seemingly invincible. It states heat flows only from where it is hot to where it is cold, fortelling a universe eventually bereft of tempreature gradients. Without which all processes, including life, shall halt.
 
-Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vestibulum faucibus convallis lorem id tincidunt. Morbi ullamcorper auctor orci, eget luctus lectus mattis non. Sed dapibus condimentum mauris, a pulvinar leo auctor non.
+In this research we introduce pseudo-momentum. A novel quantity that allows work to be performed even in the absence of pre-existing tempreature gradients, violating the second law of thermodynamics. We hypothesize the conservation of this quantity supersedes the conservation of momentum at sub-quantum scales beyond our current observational capacity.
 
-- **Nulla nec tincidunt nisi.** Morbi id risus in elit vehicula lacinia aliquam sit amet enim lorem donec id convallis mi suspendisse potenti.
-- **Phasellus at gravida.** Sapien, nec feugiat urna sed posuere risus a finibus sollicitudin gravida semper dui ut eleifend. Maecenas ac elit vel velit lacinia cursus non non nunc.
-- **Quisque mollis.** Iaculis ligula sed malesuada interdum ante sed consequat fusce sollicitudin diam eget est scelerisque, id fringilla sapien malesuada.
+We support this claim through a simulation, within which we create a quantum oscillator behaviourally identical to an electron. To further validate our simulation, we reproduce larger entities including whole atoms, and culminating in the simulation of simple molecules like water and methane. By reproducing seminal experiments, such as the double-slit experiment, we affirm our simulation's compatibility with special relativity and quantum mechanics. Running these simulations required sophisticated computational techniques, which we will detail.
 
-Proin pellentesque dictum metus non consequat. Ut ac dolor in urna faucibus cursus et non erat. Sed tincidunt turpis id nisl posuere, sit amet mattis tortor tincidunt. Nam at tellus at justo aliquam porttitor id eget lacus. Vivamus sed ex elit. Cras aliquet vestibulum commodo. Sed fringilla sem et libero ultrices interdum. Morbi eleifend, urna sit amet egestas auctor, dolor lacus interdum ex, vitae molestie massa mauris at elit. Sed pretium dapibus tortor, et sollicitudin purus aliquam ut. Phasellus eu justo malesuada, tincidunt risus non, pellentesque mi. Vestibulum posuere varius ligula, eu tincidunt mi rutrum et. Sed ullamcorper tortor non est tincidunt viverra.
-
-{
-// It is not energy but energy gradients, such as the difference between hot and cold, that makes work possible. So as hot and cold mix together
-
-// At the most basic level, the second law of thermodynamics states. Arrow of time
-
-// Accompanied by a corresponding increase in
-
-// The evidence that this law is inviolable is tremendously strong
-
-// Too terrible to accept
-
-// We must exhaust all possible avenues of inquiry
-
-// To give hope to those who dream of a distant and bright future.
-
-// - **Defining pseudo-momentum.** We demonstrate that the conservation of pseudo-momentum promotes spontaneous self-organization within closed systems. We elucidate the link between pseudo-momentum, momentum and the second law of thermodynamics, and how the adoption of pseudo-momentum disrupts them.
-// - **Model refinement.** We build on the pseudo-momentum conservation principle. We refine our model and develop a more sophisticated simulation capable of emulating a quantum oscillator, that we claim is equivalent to an electron. By replicating seminal experiments, such as the double-slit experiment, we affirm the simulation's compatibility with special relativity and quantum mechanics.
-// - **Scaling up.** We test the model's capability by simulating progressively larger entities, ultimately replicating simple molecules like water and methane. We present the computational techniques that make such large-scale simulations possible.
-// - **Questions for further research.** We present radical hypotheses for new physics and explore potential future directions for this research. We discuss the project's philosophical and practical ramifications.
-
-// Inspiration for this project comes from the dynamics of Artificial Neural Networks and General Systems Theory
-}
+The inspiration for this research stemmed from the study of artificial neural networks and general systems theory. We aim to paint an optimistic view of the universe's ultimate destiny. And we envision applications for the work across fields such as nuclear energy, quantum computing, and drug discovery.
 
 </div>
 
 <h2 id="pseudo-momentum">Defining pseudo-momentum</h2>
 
-We employ a toy simulation to introduce pseudo-momentum, a novel quantity derived from the introduction of pseudo-elastic collisions. While the simulation does not model any known physical laws, it provides a clear demonstration of emergent behaviour related to pseudo-momentum.
+We employ a toy to introduce pseudo-momentum, a novel quantity derived from the introduction of pseudo-elastic collisions. While the toy does not model any known physical laws, it provides a clear demonstration of emergent behaviour related to pseudo-momentum.
 
-In our simulation particles follow straight-line paths at constant velocity. Collisions with the boundary are perfectly elastic, while particle-particle collisions are pseudo-elastic. All particles share equal mass.
+In our toy, particles follow straight-line paths at constant velocity. Collisions with the boundary are perfectly elastic, while particle-particle collisions are pseudo-elastic. All particles share equal mass.
 
 The equation governing particle-particle collisions is given by:
 
@@ -78,13 +56,13 @@ $$
 
 where $\mathbf{x}$ and $\mathbf{v}$ denote position and velocity respectively, $\mathbf{J}$ is the impulse, $E$ is the coefficient of pseudo-elasticity, and ${\color{blue}S}$ is a scaling factor introduced to preserve pseudo-momentum. In the absence of ${\color{blue}S}$, the equation reduces to the classical particle-particle collision equation.
 
-We encourage readers to interact with the simulation and observe the effect of reducing the pseudo-elasticity:
+We encourage readers to interact with the toy and observe the effect of reducing the pseudo-elasticity:
 
 <Figure>
-  <ParticleSimulation />
+  <ParticleToy />
 </Figure>
 
-For $E \lt 1$, particles' velocities align, exhibiting emergent order within the closed system of our simulation. That's unlike physical processes that only produce a superficial reduction of disorder (such as the formation of our solar system). The difference in behaviour is primarily because kinetic energy is not converted into internal energy within the simulation.
+For $E \lt 1$, particles' velocities align, exhibiting emergent order within the closed system of our toy. That's unlike physical processes that only produce a superficial reduction of disorder (such as the formation of our solar system). The difference in behaviour is primarily because kinetic energy is not converted into internal energy within the toy.
 
 With or without ${\color{blue}S}$, the direction of total (pseudo-)momentum remains invariant. For $E = 1$, additional conservation symmetries are observed:
 
@@ -95,52 +73,40 @@ $$
 }
 $$
 
-where $\mathbf{p}$ is (pseudo-)momentum. Classical physics loses symmetry $\|\mathbf{p}_1\| + \|\mathbf{p}_2\| = \|\mathbf{p}'_1\| + \|\mathbf{p}'_2\|$ for $E \neq 1$. However, the inclusion of ${\color{blue}S}$ retains it, leading us to define pseudo-momentum as this conserved quantity. In adopting pseudo-momentum, we forfeit the conservation of momentum $\mathbf{p}_1 + \mathbf{p}_2 = \mathbf{p}'_1 + \mathbf{p}'_2$ for $E \neq 1$. Nevertheless, this sacrifice is necessary in our quest to challenge the second law of thermodynamics.
+where $\mathbf{p}$ is (pseudo-)momentum. Classical physics loses symmetry $\|\mathbf{p}_1\| + \|\mathbf{p}_2\| = \|\mathbf{p}'_1\| + \|\mathbf{p}'_2\|$ for $E \neq 1$. However, the inclusion of ${\color{blue}S}$ retains it, leading us to define pseudo-momentum as this conserved quantity. In adopting pseudo-momentum, we forfeit the conservation of momentum $\mathbf{p}_1 + \mathbf{p}_2 = \mathbf{p}'_1 + \mathbf{p}'_2$ for $E \neq 1$.
 
 From now onwards, we will use $\boldsymbol{\rho}$ to denote pseudo-momentum.
 
 <h2 id="understanding-disorder">Understanding disorder</h2>
-{
-  // time-reversibility present as theme in both sub-sections
-  // size of configuration space - Boltzmann
-  // file sizes - Kolmogorov
-}
 
-{
-// ### Part One
+TODO
 
-// Brief introduction to the video's topic
-// Mention the aim of the video: to explore the possibility of reversing the 'arrow of time' and saving the universe
-// I. Why the Second Law of Thermodynamics is Terrible
+<h2 id="simulation">Designing the simulation</h2>
 
-// Explanation of the Second Law of Thermodynamics
-// Consequences of the law: increasing entropy and the eventual heat death of the universe
-// Discuss the impact of the law on energy resources and the environment
-// II. Proof of the Second Law of Thermodynamics Based on Related Axioms
+effect of dispersion quotient on centrifugality vs centripetality
 
-// Introduce the axioms: conservation of kinetic energy, reversible physics, and conservation of information
-// Explain how these axioms support the Second Law of Thermodynamics
-// Discuss the implications of these axioms on our understanding of time and the universe
-// III. Disproving the Axioms: Reversing the 'Arrow of Time'
+The dispersion function $D(\theta)$, where $\theta$ is the cosine similarity between $\mathbf{x}_1$ and $\mathbf{x}_2$, is a strictly increasing function with constraint $D(\theta) > 0$. We characterise $D(\theta)$ with dispersion factor $\delta$ where, informally speaking, $\delta$ measures how much the pseudo-momentum will spread out each time step and is defined by:
 
-// Discuss the need to disprove the axioms in order to challenge the Second Law of Thermodynamics
-// Explore various theories and ideas that attempt to disprove or modify the axioms
-// IV. The Strength of the Axioms and the Challenge of Disproving Them
+$$
+\delta \in \left\{-\theta:D(\theta)=\frac{\int_{-1}^{1}D(\theta) \, d\theta}{2}\right\}
+$$
 
-// Explain the strong support for the axioms in the field of physics (e.g., success in quantum mechanics, Noether's theorem, etc.)
-// Discuss the difficulty and challenges of disproving or modifying these axioms
-// V. A Seemingly Counterintuitive Example: The Formation of Our Solar System
+Functions that satisfy $D(\theta)$ include $-a\theta^2+0.5\theta+a+0.5$ and $1 / (1+e^{-6\theta-a})$, where the value of $\delta$ increases with $a$.
 
-// Describe the process of the solar system's formation and how it appears to increase order
-// Explain that the net increase in disorder is due to the conversion of kinetic energy to thermal energy during the process
-// VI. Imagining an Alternative Universe with Self-Ordering Dynamics
+By virtue of $X(\|\mathbf{x}_1-\mathbf{x}_2\|)$ being fixed, velocity is also fixed to a value we call $c$
 
-// Propose a hypothetical world with alternative physics that takes self-ordering dynamics into account
-// Show a simulation of particles sticking together, creating an ordered entity in this alternative world
-// Discuss the implications of such a world and how it challenges our understanding of the Second Law of Thermodynamics
-// Conclusion:
+<h2 id="electron-model">Modelling an electron</h2>
 
-// Summarize the main points of the video
-// Emphasize the importance of continually questioning and exploring scientific laws and theories
-// Encourage viewers to take inspiration from the solar system and continue the quest to save the universe
-}
+TODO
+
+<h2 id="scaling">Scaling up</h2>
+
+TODO
+
+<h2 id="experiments">Experiments</h2>
+
+TODO
+
+<h2 id="questions">Questions for further research</h2>
+
+TODO

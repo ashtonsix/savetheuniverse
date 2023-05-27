@@ -128,7 +128,12 @@ export class Driver {
     const particles = this.gui.particles;
     particles.onChange(this.updateParticles.bind(this));
     particles.add(this.particles, "pseudo-elasticity", 0, 1.5);
+    let prevLogRadius = this.particles["log(radius)"];
     particles.add(this.particles, "log(radius)", -7, -3).onChange(() => {
+      this.timeControl["log(step size)"] +=
+        this.particles["log(radius)"] - prevLogRadius;
+      prevLogRadius = this.particles["log(radius)"];
+      updateDisplay(this.gui.timeControl, "log(step size)");
       this.particles.count = this.densityToCount();
       this.guic.particleCount.max(this.densityToCount(1));
       updateDisplay(this.gui.particles, "count");

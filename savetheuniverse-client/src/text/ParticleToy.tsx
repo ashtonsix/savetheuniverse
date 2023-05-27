@@ -2,7 +2,7 @@ import { useRef, useEffect } from "react";
 import { Core } from "../particles/core";
 import { Driver } from "../particles/driver";
 
-export const ParticleSimulation = () => {
+export const ParticleToy = () => {
   const driverContainer = useRef(null);
   const coreContainer = useRef(null);
   useEffect(() => {
