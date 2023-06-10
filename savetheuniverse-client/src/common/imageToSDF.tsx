@@ -7,6 +7,11 @@ type Mask = {
   data: ArrayLike<number>;
 };
 
+type Polyline = {
+  x: number[];
+  y: number[];
+};
+
 // iterator yields [x, y, i] triplets
 function* allXY(width: number, height: number) {
   const reg = [0, 0, -1];
@@ -97,7 +102,8 @@ function uploadMask(callbackFn: (mask: Mask) => void) {
 }
 
 function maskToPolylines(mask: Mask) {
-  const coords: number[] = [];
+  const coordsx: number[] = [];
+  const coordsy: number[] = [];
   const adjacencyList: number[][] = [];
 
   // create adjacency list from boundary between white / black pixels
@@ -107,12 +113,13 @@ function maskToPolylines(mask: Mask) {
     const bld = mask.data[bl];
     const brd = mask.data[br];
     const edges: number[] = [];
-    const [t, l, r, b] = getCardinalIndices(x, y, mask.width);
+    const [t, l, r, b] = getCardinalIndices(x, y, mask.width - 1);
     if (tld !== trd) edges.push(t);
     if (tld !== bld) edges.push(l);
     if (trd !== brd) edges.push(r);
     if (bld !== brd) edges.push(b);
-    coords.push(x, y);
+    coordsx.push(x);
+    coordsy.push(y);
     adjacencyList.push(edges);
   }
 
@@ -123,9 +130,10 @@ function maskToPolylines(mask: Mask) {
     const tl = y * mask.width + x;
     const tld = mask.data[tl];
     const j = adjacencyList.length;
-    const [t, l, r, b] = getCardinalIndices(x, y, mask.width);
+    const [t, l, r, b] = getCardinalIndices(x, y, mask.width - 1);
 
-    coords.push(x, y);
+    coordsx.push(x);
+    coordsy.push(y);
     if (tld) {
       adjacencyList[i] = [t, r];
       adjacencyList[j] = [l, b];
@@ -144,66 +152,118 @@ function maskToPolylines(mask: Mask) {
   }
 
   // convert adjacency list to polylines by identifying connected components using DFS
-  const polylines: number[][] = [];
+  const polylinesx: number[][] = [];
+  const polylinesy: number[][] = [];
   const visited = new Array(adjacencyList.length).fill(false);
   for (let i = 0; i < adjacencyList.length; i++) {
     if (visited[i]) continue;
     if (adjacencyList[i].length === 0) continue;
 
-    const polyline = [];
+    const polylinex = [];
+    const polyliney = [];
 
     const stack = [i];
     while (stack.length) {
       const node = stack.pop()!;
       if (visited[node]) continue;
 
-      polyline.push(coords[node * 2], coords[node * 2 + 1]);
+      polylinex.push(coordsx[node]);
+      polyliney.push(coordsy[node]);
 
       visited[node] = true;
       for (let neighbor of adjacencyList[node]) {
-        if (visited[node]) continue;
+        if (visited[neighbor]) continue;
         stack.push(neighbor);
       }
     }
-
-    debugger;
-
-    polylines.push(polyline);
+    if (polylinex.length < 12) continue;
+    polylinesx.push(polylinex);
+    polylinesy.push(polyliney);
   }
 
-  // smooth polylines, by iteratively moving each point to the (weighted) average
-  // of their neighbour's positions and the point's original position
-  for (let p = 0; p < polylines.length; p++) {
-    let polyline = polylines[p];
-    let copy = polyline.slice();
-    for (let iteration = 0; iteration < 10; iteration++) {
-      for (let ia = 0; ia < polyline.length; ia += 2) {
-        let im = (ia + 2) % polyline.length;
-        let ib = (ia + 4) % polyline.length;
-        let xa = polyline[ia];
-        let xm = coords[im];
-        let xb = polyline[ib];
-        copy[im] = (xa + xm * 0.25 + xb) / 2.25;
-        let ya = polyline[ia + 1];
-        let ym = coords[im + 1];
-        let yb = polyline[ib + 1];
-        copy[im + 1] = (ya + ym * 0.25 + yb) / 2.25;
-      }
-      let tmp = polyline;
-      polyline = copy;
-      copy = tmp;
+  // smooth polyines with moving average
+  for (let p = 0; p < polylinesx.length; p++) {
+    let polylinex = polylinesx[p];
+    let polyliney = polylinesy[p];
+    let copyx = polylinex.slice();
+    let copyy = polyliney.slice();
+    let window = 4;
+    let avgx = 0;
+    let avgy = 0;
+    for (let i = 0; i < window; i++) {
+      avgx += copyx[i % polylinex.length];
+      avgy += copyy[i % polyliney.length];
     }
+    avgx /= window;
+    avgy /= window;
+    for (let i = 0; i < polylinex.length; i++) {
+      polylinex[i] = avgx;
+      polyliney[i] = avgy;
+      avgx -= copyx[i] / window;
+      avgy -= copyy[i] / window;
+      avgx += copyx[(i + window) % polylinex.length] / window;
+      avgy += copyy[(i + window) % polyliney.length] / window;
+    }
+  }
+
+  // refine polyline smoothing with spring-based algorithm
+  for (let p = 0; p < polylinesx.length; p++) {
+    let polylinex = polylinesx[p];
+    let polyliney = polylinesy[p];
+    let copyx = polylinex.slice();
+    let copyy = polyliney.slice();
+    let origx = polylinex.slice();
+    let origy = polyliney.slice();
+    let t = 0.1;
+    let ko = 0.1;
+    let kn = 1;
+    let iters = 1000;
+    for (let iter = 0; iter < iters; iter++) {
+      for (let ia = 0; ia < polylinex.length; ia++) {
+        let io = (ia + 1) % polylinex.length;
+        let ib = (ia + 2) % polylinex.length;
+
+        let x = polylinex[io];
+        polylinex[io] = copyx[io];
+        polylinex[io] -= (x - origx[io]) * ko * t;
+        polylinex[io] -= (x - copyx[ia]) * kn * t;
+        polylinex[io] -= (x - copyx[ib]) * kn * t;
+
+        let y = polyliney[io];
+        polyliney[io] = copyy[io];
+        polyliney[io] -= (y - origy[io]) * ko * t;
+        polyliney[io] -= (y - copyy[ia]) * kn * t;
+        polyliney[io] -= (y - copyy[ib]) * kn * t;
+      }
+      polylinesx[p] = polylinex;
+      polylinesy[p] = polyliney;
+      polylinex = copyx;
+      polyliney = copyy;
+      copyx = polylinesx[p];
+      copyy = polylinesy[p];
+    }
+  }
+
+  // restructure polylines
+  const polylines: Polyline[] = [];
+  for (let p = 0; p < polylinesx.length; p++) {
+    polylines.push({ x: polylinesx[p], y: polylinesy[p] });
   }
 
   return polylines;
 }
 
+function polylinesToBSplineCoeffcients(
+  polylinesx: number[][],
+  polylinesy: number[][]
+) {}
+
 export const ImageToSDFReactBridge = () => {
   const ref = React.useRef<HTMLDivElement>(null);
   const [polylines, setPolylines] = useState<{
-    coords: number[];
-    adjacencyList: number[][];
-  } | null>(null);
+    polylinesx: number[][];
+    polylinesy: number[][];
+  }>({ polylinesx: [], polylinesy: [] });
   const [canvas, setCanvas] = useState<Canvas | null>(null);
   useEffect(() => {
     if (!ref.current) return;
@@ -216,6 +276,8 @@ export const ImageToSDFReactBridge = () => {
 
   return (
     <div>
+      For best results, use a 1024 x 1024 pixel image and avoid fine detail
+      (features measuring less than 10px across).
       <div ref={ref} className="aspect-video"></div>
       <button
         className="border h-10 my-auto px-2 py-1 bg-slate-200 border-slate-800 cursor-pointer"
@@ -225,21 +287,18 @@ export const ImageToSDFReactBridge = () => {
             const polylines = maskToPolylines(mask);
             setPolylines(polylines);
             canvas.draw((dst) => {
-              for (let x = 0; x < canvas.width; x++) {
-                for (let y = 0; y < canvas.height; y++) {
-                  const i = (y * canvas.width + x) * 4;
-                  const j = y * mask.width + x;
-                  if (x > mask.width || y > mask.height) {
-                    dst[i + 0] = 0;
-                    dst[i + 1] = 0;
-                    dst[i + 2] = 0;
-                    dst[i + 3] = 255;
-                  } else {
-                    dst[i + 0] = mask.data[j] ? 0 : 255;
-                    dst[i + 1] = mask.data[j] ? 0 : 255;
-                    dst[i + 2] = mask.data[j] ? 0 : 255;
-                    dst[i + 3] = 255;
-                  }
+              for (let [x, y, i] of allXY(canvas.width, canvas.height)) {
+                if (x >= mask.width || y >= mask.height) {
+                  dst[i * 4 + 0] = 0;
+                  dst[i * 4 + 1] = 0;
+                  dst[i * 4 + 2] = 0;
+                  dst[i * 4 + 3] = 255;
+                } else {
+                  let j = y * mask.width + x;
+                  dst[i * 4 + 0] = mask.data[j] ? 0 : 255;
+                  dst[i * 4 + 1] = mask.data[j] ? 0 : 255;
+                  dst[i * 4 + 2] = mask.data[j] ? 0 : 255;
+                  dst[i * 4 + 3] = 255;
                 }
               }
             });
@@ -249,13 +308,14 @@ export const ImageToSDFReactBridge = () => {
       >
         Upload Image
       </button>
-      <svg width={1040} height={640} viewBox={`0 0 ${1040} ${640}`}>
-        {polylines.map((polyline, i) => {
+      <svg width={1040} height={1040} viewBox={`0 0 ${1040} ${640}`}>
+        {polylines.polylinesx.map((polylinex, i) => {
+          let polyliney = polylines.polylinesy[i];
           let path = "";
-          for (let i = 0; i < polyline.length; i += 2) {
+          for (let i = 0; i <= polylinex.length; i++) {
             const instruction = i === 0 ? "M" : "L"; // move or line
-            const x = polyline[i * 2];
-            const y = polyline[i * 2 + 1];
+            const x = polylinex[i % polylinex.length];
+            const y = polyliney[i % polyliney.length];
             path += `${instruction}${x},${y}`;
           }
 
