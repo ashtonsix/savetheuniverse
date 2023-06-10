@@ -9,7 +9,6 @@ export const ParticleToy = () => {
     if (driverContainer.current && coreContainer.current) {
       const driver = new Driver(driverContainer.current);
       const core = new Core(driver, coreContainer.current);
-      Object.assign(window, { driver, core });
       return () => {
         driver.destroy();
         core.destroy();

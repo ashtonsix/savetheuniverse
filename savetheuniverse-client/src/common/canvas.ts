@@ -23,6 +23,7 @@ class Canvas {
       width,
       height
     );
+    canvas.className = "m-auto";
     canvas.height = height;
     canvas.width = width;
     canvas.style.height = `${height * cellSz}px`;

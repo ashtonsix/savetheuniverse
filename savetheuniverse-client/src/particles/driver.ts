@@ -29,6 +29,8 @@ const generateValve = () => {
   return b;
 };
 
+const maxDensity = Math.PI / (2 * 3 ** 0.5);
+
 export class Driver {
   core: Core;
   boundaryArea = 0;
@@ -36,7 +38,7 @@ export class Driver {
   guic: { [key: string]: Controller } = {};
   timeControl = {
     "iters per frame": 10,
-    "log(step size)": -6,
+    "log(step size)": 0,
     "frames per second": 60,
     step: () => {
       this.core.frame();
@@ -115,7 +117,13 @@ export class Driver {
     const timeControl = this.gui.timeControl;
     timeControl.onChange(this.updateTimeControl.bind(this));
     timeControl.add(this.timeControl, "iters per frame", 1, 50, 1);
-    timeControl.add(this.timeControl, "log(step size)", -9, -5);
+    this.timeControl["log(step size)"] = this.particles["log(radius)"] - 1.75;
+    this.guic.stepSize = timeControl.add(
+      this.timeControl,
+      "log(step size)",
+      this.particles["log(radius)"] - 4,
+      this.particles["log(radius)"] - 0.5
+    );
     timeControl.add(
       this.timeControl,
       "frames per second",
@@ -129,13 +137,16 @@ export class Driver {
     particles.onChange(this.updateParticles.bind(this));
     particles.add(this.particles, "pseudo-elasticity", 0, 1.5);
     let prevLogRadius = this.particles["log(radius)"];
-    particles.add(this.particles, "log(radius)", -7, -3).onChange(() => {
+    particles.add(this.particles, "log(radius)", -6.5, -3).onChange(() => {
       this.timeControl["log(step size)"] +=
         this.particles["log(radius)"] - prevLogRadius;
+      this.guic.stepSize.min(this.particles["log(radius)"] - 4);
+      this.guic.stepSize.max(this.particles["log(radius)"] - 0.5);
       prevLogRadius = this.particles["log(radius)"];
       updateDisplay(this.gui.timeControl, "log(step size)");
+      this.updateTimeControl();
       this.particles.count = this.densityToCount();
-      this.guic.particleCount.max(this.densityToCount(1));
+      this.guic.particleCount.max(this.densityToCount(maxDensity));
       updateDisplay(this.gui.particles, "count");
       this.updateParticles();
     });
@@ -145,7 +156,7 @@ export class Driver {
       updateDisplay(this.gui.particles, "density");
       this.updateParticles();
     });
-    particles.add(this.particles, "density", 0, 1).onChange(() => {
+    particles.add(this.particles, "density", 0, maxDensity).onChange(() => {
       const count = this.densityToCount();
       this.particles.count = count;
       updateDisplay(this.gui.particles, "count");
@@ -256,7 +267,7 @@ export class Driver {
     this.core.updateBoundary(sdf);
     this.boundaryArea = estimateArea(sdf);
     if (this.particles.count) this.particles.density = this.countToDensity();
-    this.guic.particleCount.max(this.densityToCount(1));
+    this.guic.particleCount.max(this.densityToCount(maxDensity));
     updateDisplay(this.gui.particles, "count", "density");
   }
 }

@@ -91,7 +91,7 @@ export class ParticleViz {
     PIXI.Ticker.shared.autoStart = false;
     PIXI.Ticker.shared.stop();
 
-    this.spriteContainer = new PIXI.ParticleContainer(65536, options);
+    this.spriteContainer = new PIXI.ParticleContainer(262144, options);
 
     this.app.stage.addChild(this.spriteContainer);
     this.resizeObserver = new ResizeObserver(() => this.draw());
@@ -109,7 +109,7 @@ export class ParticleViz {
     const spriteLength = r * 2 * scale;
     // create sprites
     for (let i = this.sprites.length; i < n; i++) {
-      const sprite = PIXI.Sprite.from("/arrow_32.png");
+      const sprite = PIXI.Sprite.from("/arrow.png");
       sprite.anchor.set(0.5);
       this.sprites.push(sprite);
       this.spriteContainer.addChild(sprite);

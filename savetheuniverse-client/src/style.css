@@ -33,11 +33,43 @@
     grid-column: text;
   }
 
+  @media (max-width: 72rem) {
+    .layout {
+      display: grid;
+      /* prettier-ignore */
+      grid-template-columns:
+        [screen-start] theme(spacing.8)
+        [middle-start] theme(spacing.16)
+        [text-start] 1fr
+        [text-end] theme(spacing.16)
+        [middle-end] theme(spacing.8)
+        [screen-end];
+      grid-column-gap: 0;
+    }
+
+    .toc {
+      @apply hidden;
+    }
+  }
+
+  @media (max-width: 768px) {
+    .layout {
+      display: grid;
+      /* prettier-ignore */
+      grid-template-columns:
+        [screen-start middle-start] theme(spacing.8)
+        [text-start] 1fr
+        [text-end] theme(spacing.8)
+        [middle-end screen-end];
+    }
+
+  }
+
   .prose h2 {
     @apply text-4xl font-bold border-b pb-4 mt-4 mb-6 leading-normal;
   }
 
-  .prose ul {
+  .prose ul, .prose ol {
     @apply pl-6 mb-4;
   }
 
@@ -45,7 +77,11 @@
     @apply list-disc mb-4;
   }
 
-  .prose ul > li:last-child {
+  .prose ol > li {
+    @apply list-decimal mb-4;
+  }
+
+  .prose ul > li:last-child, .prose ol > li:last-child {
     @apply mb-0;
   }
 
