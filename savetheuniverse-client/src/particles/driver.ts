@@ -1,9 +1,4 @@
 import GUI, { Controller } from "lil-gui";
-import {
-  distanceFunctionFactory,
-  estimateArea,
-  sampleInside,
-} from "../common/field";
 import { Core } from "./core";
 
 const { random, floor, max, cos, sin, PI, E } = Math;
@@ -15,25 +10,10 @@ function updateDisplay(gui: GUI, ...controllers: string[]) {
   }
 }
 
-const generateValve = () => {
-  const b = [] as [boolean, number, number, number][];
-  let x = -0.9;
-  let y = 0;
-  let r = 0.1;
-  for (let j = 0; j < 19; j++) {
-    b.push([true, x, y, r * 0.8]);
-    b.push([false, x + r * 1.3, y, r * 0.25]);
-    x += r;
-    y += r * (j % 2 || -1);
-  }
-  return b;
-};
-
 const maxDensity = Math.PI / (2 * 3 ** 0.5);
 
 export class Driver {
   core: Core;
-  boundaryArea = 0;
   gui: { [key: string]: GUI } = {};
   guic: { [key: string]: Controller } = {};
   timeControl = {
@@ -53,15 +33,15 @@ export class Driver {
     count: 0,
     density: 0.4,
     reset: () => {
-      const b = this.core.boundary;
       const { n, r, x_x, x_y, v_x, v_y } = this.core.particles;
-      sampleInside(b, n, r, (x: number, y: number, i: number) => {
+      for (let i = 0; i < n; i++) {
+        let [x, y] = this.core.boundary.sampleInside(r);
         x_x[i] = x;
         x_y[i] = y;
         let d = random() * PI * 2;
         v_x[i] = cos(d);
         v_y[i] = sin(d);
-      });
+      }
     },
     randomise: () => {
       this.core.updateParticles(undefined, () => {
@@ -173,9 +153,6 @@ export class Driver {
     boundary.add(this.boundary, "smoothing", 0, 0.1);
     boundary.add(this.boundary, "add shape");
     this.boundary["add shape"]();
-    // for (const [solid, cx, cy, r] of generateValve()) {
-    //   this.addBoundaryShape(solid, cx, cy, r);
-    // }
   }
   destroy() {
     this.gui.root.destroy();
@@ -207,14 +184,16 @@ export class Driver {
     value = value || p.count;
     const r = E ** p["log(radius)"];
     const particleArea = r * r * PI;
-    return (particleArea * value) / this.boundaryArea;
+    const boundaryArea = this.core.boundary.area;
+    return (particleArea * value) / boundaryArea;
   }
   densityToCount(value?: number) {
     const p = this.particles;
     value = value || p.density;
     const r = E ** p["log(radius)"];
     const particleArea = r * r * PI;
-    return floor((this.boundaryArea * value) / particleArea);
+    const boundaryArea = this.core.boundary.area;
+    return floor((boundaryArea * value) / particleArea);
   }
   init(core: Core) {
     this.core = core;
@@ -223,7 +202,8 @@ export class Driver {
     const p = this.particles;
     const r = E ** p["log(radius)"];
     const particleArea = r * r * PI;
-    p.count = floor((this.boundaryArea * p.density) / particleArea);
+    const boundaryArea = this.core.boundary.area;
+    p.count = floor((boundaryArea * p.density) / particleArea);
     for (let c of this.gui.particles.controllers) c.updateDisplay();
     this.updateParticles();
   }
@@ -240,32 +220,27 @@ export class Driver {
     this.core.updateParticleRadius(E ** p["log(radius)"]);
     this.core.updateParticles(p.count, (i: number, n: number) => {
       const { r, x_x, x_y, v_x, v_y } = this.core.particles;
-      sampleInside(
-        this.core.boundary,
-        n - i,
-        r,
-        (x: number, y: number, j: number) => {
-          x_x[i + j] = x;
-          x_y[i + j] = y;
-          let d = random() * PI * 2;
-          v_x[i + j] = cos(d);
-          v_y[i + j] = sin(d);
-        }
-      );
+      for (; i < n; i++) {
+        let [x, y] = this.core.boundary.sampleInside(r);
+        x_x[i] = x;
+        x_y[i] = y;
+        let d = random() * PI * 2;
+        v_x[i] = cos(d);
+        v_y[i] = sin(d);
+      }
     });
   }
   updateBoundary() {
     if (!this.core) return;
-    const b = this.boundary;
-    const solid: number[][] = [];
-    const hole: number[][] = [];
-    for (const s of b.shapes) {
-      if (s.solid) solid.push([s.cx, s.cy, s.r]);
-      else hole.push([s.cx, s.cy, s.r]);
-    }
-    const sdf = distanceFunctionFactory(solid, hole, b.smoothing);
-    this.core.updateBoundary(sdf);
-    this.boundaryArea = estimateArea(sdf);
+    // const solid: number[][] = [];
+    // const hole: number[][] = [];
+    // for (const s of b.shapes) {
+    //   if (s.solid) solid.push([s.cx, s.cy, s.r]);
+    //   else hole.push([s.cx, s.cy, s.r]);
+    // }
+    // const sdf = distanceFunctionFactory(solid, hole, b.smoothing);
+    // this.core.updateBoundary(sdf);
+    this.boundaryArea = this.core.boundary.area;
     if (this.particles.count) this.particles.density = this.countToDensity();
     this.guic.particleCount.max(this.densityToCount(maxDensity));
     updateDisplay(this.gui.particles, "count", "density");

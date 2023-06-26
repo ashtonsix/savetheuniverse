@@ -1,10 +1,10 @@
 import { useRef, useEffect, ReactElement, useState } from "react";
-import { Core } from "../cellgrid/core";
+import { Core } from "../../cellgrid/core";
 import React from "react";
 
 const { floor } = Math;
 
-function initCoreTransferViz(
+function initCoreSimDesignTransfer(
   container: HTMLElement,
   radius: number,
   dispersionFactor: number,
@@ -31,7 +31,11 @@ function initCoreTransferViz(
   return core;
 }
 
-export const TransferViz = ({ children }: { children: React.ReactNode }) => {
+export const SimDesignTransfer = ({
+  children,
+}: {
+  children: React.ReactNode;
+}) => {
   const captions: { [id: string]: React.ReactNode } = {};
   React.Children.forEach(children, (caption) => {
     const { props } = caption as ReactElement;
@@ -50,19 +54,19 @@ export const TransferViz = ({ children }: { children: React.ReactNode }) => {
       dispersionContainer.current &&
       combinedContainer.current
     ) {
-      const distance = initCoreTransferViz(
+      const distance = initCoreSimDesignTransfer(
         distanceContainer.current,
         radius,
         dispersionFactor,
         angle
       );
-      const dispersion = initCoreTransferViz(
+      const dispersion = initCoreSimDesignTransfer(
         dispersionContainer.current,
         radius,
         dispersionFactor,
         angle
       );
-      const combined = initCoreTransferViz(
+      const combined = initCoreSimDesignTransfer(
         combinedContainer.current,
         radius,
         dispersionFactor,
@@ -142,105 +146,11 @@ export const TransferViz = ({ children }: { children: React.ReactNode }) => {
   );
 };
 
-const TransferVizCaption = ({
+const SimDesignTransferCaption = ({
   children,
 }: {
   children: React.ReactNode;
   id: string;
 }) => <span>{children}</span>;
 
-TransferViz.Caption = TransferVizCaption;
-
-const mix = (a: number, b: number, p: number) => {
-  Math.min(Math.max(a, a * (1 - p) + b * p), b);
-};
-
-export const SimDesign = () => {
-  const [dispersionFactor, setDispersionFactor] = useState(-0.25);
-  const [nonce, setNonce] = useState(0);
-  const [core, setCore] = useState<Core | null>(null);
-  const coreContainer = useRef(null);
-  useEffect(() => {
-    if (coreContainer.current) {
-      const length = 64;
-      const core = new Core(length, length, coreContainer.current);
-      setCore(core);
-      core.dispersion = (x: number) => {
-        const d = dispersionFactor;
-        return -d * x ** 2 + 0.5 * x + d + 0.5;
-      };
-
-      const cx = length / 2;
-      const cy = length / 2;
-      for (let i = 0; i < core.height * core.width; i++) {
-        const x = i % core.width;
-        const y = floor(i / core.width);
-        const dist = ((x - cx) ** 2 + (y - cy) ** 2) ** 0.5;
-        const boundaryThreshold = length / 2 - 10;
-        if (dist > boundaryThreshold) {
-          const angle = Math.atan2(y - cy, x - cx) + Math.PI;
-          const mag = ((dist - boundaryThreshold) * 12) / length;
-          core.itr_x[i] = Math.cos(angle) * mag;
-          core.itr_y[i] = Math.sin(angle) * mag;
-        } else {
-          const angle = Math.atan2(y - cy, x - cx) + Math.random() * Math.PI;
-          const mag = Math.random() * 2;
-          core.val_x[i] = Math.cos(angle) * mag;
-          core.val_y[i] = Math.sin(angle) * mag;
-        }
-      }
-      (window as any).core = core;
-      core.neighbourhoodRadius = 4;
-      return () => {
-        core.destroy();
-      };
-    }
-  }, [nonce]);
-
-  return (
-    <div>
-      <div ref={coreContainer} className="aspect-video"></div>
-      <div className="flex mt-2 gap-4">
-        <button
-          className="border h-10 my-auto px-2 py-1 bg-slate-200 border-slate-800 cursor-pointer"
-          onClick={() => {
-            if (core) {
-              core.ticker.playing = !core.ticker.playing;
-            }
-          }}
-        >
-          Play / Pause
-        </button>
-        <button
-          className="border h-10 my-auto px-2 py-1 bg-slate-200 border-slate-800 cursor-pointer"
-          onClick={() => {
-            setNonce((nonce) => nonce + 1);
-          }}
-        >
-          Reset
-        </button>
-        <label>
-          Dispersion = {dispersionFactor.toFixed(2)}
-          <br />
-          <input
-            type="range"
-            value={dispersionFactor}
-            min={-0.25}
-            max={0.25}
-            step={0.01}
-            className="w-72"
-            onChange={(e) => {
-              const d = +e.target.value;
-              setDispersionFactor(d);
-              if (core) {
-                core.dispersion = (x: number) => {
-                  return -d * x ** 2 + 0.5 * x + d + 0.5;
-                };
-              }
-            }}
-          />
-        </label>
-      </div>
-    </div>
-  );
-};
+SimDesignTransfer.Caption = SimDesignTransferCaption;

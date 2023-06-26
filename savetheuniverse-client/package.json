@@ -29,10 +29,12 @@
     "@fortawesome/free-solid-svg-icons": "^6.4.0",
     "@fortawesome/react-fontawesome": "^0.2.0",
     "@mdx-js/rollup": "^2.3.0",
+    "katex": "^0.16.7",
     "lil-gui": "^0.18.1",
     "pixi.js": "^7.2.4",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
+    "react-router-dom": "^6.12.1",
     "rehype-mathjax": "^4.0.2",
     "remark-math": "^5.1.1"
   }

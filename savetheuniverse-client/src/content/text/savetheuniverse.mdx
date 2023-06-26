@@ -1,7 +1,8 @@
-import { ParticleToy } from "./ParticleToy";
-import { TransferViz, SimDesign } from "./SimDesign";
-import { Figure } from "./Figure";
-import { ImageToSDFReactBridge } from "../common/imageToSDF";
+import { Link } from "react-router-dom";
+import { ParticleToyPseudoMomentum } from "../figures/ParticleToyPseudoMomentum";
+import { SimDesignTransfer } from "../figures/SimDesignTransfer";
+import { SimDesignCentripetal } from "../figures/SimDesignCentripetal";
+import { Figure } from "../ui/Figure";
 export const title = "Let Us Save the Universe!";
 export const subtitle =
   "Challenging the validity of the second law of thermodynamics at scales imperceptible to current measurement techniques";
@@ -25,14 +26,13 @@ export const byline = [
     - [The pertubation perspective](#pertubative)
     - [The ascendent perspective](#ascendency)
     - [Questions for further research](#questions)
+    - <Link to="/appendices">Appendices</Link>
     - <a href="#connect" className="text-[#005dff]">Connect to simulation server</a>
 
   </nav>
 </div>
 
 <div id="introduction">
-
-<ImageToSDFReactBridge />
 
 Across centuries of testing, from scales galactic to quantum, the second law of thermodynamics has stood seemingly invincible. It states heat flows only from where it is hot to where it is cold, foretelling a universe eventually bereft of temperature gradients. Without which all processes, including life, shall halt.
 
@@ -66,7 +66,7 @@ where $\mathbf{x}$ and $\mathbf{v}$ denote position and velocity respectively, $
 We encourage readers to interact with the toy and observe the effect of reducing the pseudo-elasticity:
 
 <Figure videoAspect canFullscreen>
-  <ParticleToy />
+  <ParticleToyPseudoMomentum />
 </Figure>
 
 For $E \lt 1$, particles' velocities align, exhibiting emergent order within the closed system of our toy. That's unlike physical processes that only produce a superficial reduction of disorder (such as the formation of our solar system). The difference in behaviour is primarily because kinetic energy is not converted into internal energy within the toy.
@@ -106,6 +106,8 @@ We encourage readers to interact with the demonstration below, which illustrates
 </figure>
 
 There is a quantity commonly associated with disorder, entropy, that the demonstration illuminates. Entropy is a charachteristic of macrostates, that we define as the number of microstates that satisfy a macrostate's bounds
+
+Move from less likely to more likely
 
 Macrostates with fewer possible microstates, within the context of the demonstration, are less disordered.
 
@@ -163,20 +165,20 @@ The transfer $\Delta\boldsymbol{\rho}_{1 \rightarrow 2}$ depends on:
 We visualise the transfers from one cell out to each of its neighbours $\Delta\boldsymbol{\rho}_{1 \rightarrow i}$ like so:
 
 <Figure>
-  <TransferViz>
-    <TransferViz.Caption id="distance">
+  <SimDesignTransfer>
+    <SimDesignTransfer.Caption id="distance">
       $\mathbf{\hat{d}} \cdot X(\|\mathbf{d}\|)$
-    </TransferViz.Caption>
-    <TransferViz.Caption id="dispersion">
+    </SimDesignTransfer.Caption>
+    <SimDesignTransfer.Caption id="dispersion">
       $\mathbf{\hat{d}} \cdot D(\alpha)$
-    </TransferViz.Caption>
-    <TransferViz.Caption id="combined">
+    </SimDesignTransfer.Caption>
+    <SimDesignTransfer.Caption id="combined">
       $\mathbf{\hat{d}} \cdot X(\|\mathbf{d}\|) \cdot D(\alpha)$
-    </TransferViz.Caption>
-    <TransferViz.Caption id="radius">$r$</TransferViz.Caption>
-    <TransferViz.Caption id="dispersionFactor">$\delta$</TransferViz.Caption>
-    <TransferViz.Caption id="angle">$\theta_1$</TransferViz.Caption>
-  </TransferViz>
+    </SimDesignTransfer.Caption>
+    <SimDesignTransfer.Caption id="radius">$r$</SimDesignTransfer.Caption>
+    <SimDesignTransfer.Caption id="dispersionFactor">$\delta$</SimDesignTransfer.Caption>
+    <SimDesignTransfer.Caption id="angle">$\theta_1$</SimDesignTransfer.Caption>
+  </SimDesignTransfer>
 </Figure>
 
 Taking all transfers a cell receives into account, $\boldsymbol{\rho}'_1$ is described by the pseudo-momentum conserving aggregation:
@@ -194,7 +196,7 @@ $$
 We encourage readers to interact with the completed simulation and observe the effect of increasing the dispersion factor:
 
 <Figure canFullscreen>
-  <SimDesign />
+  <SimDesignCentripetal />
 </Figure>
 
 When $\delta \lt 0$, $\boldsymbol{\rho}$ propagates across the grid as if acted upon by centrifugal force, much like the particles in our toy. Conversely, when $\delta \gt 0$, $\boldsymbol{\rho}$ propagates across the grid as if acted upon by centripetal force and accumulates within the simulation's potential basins. We will call these accumulations of pseudo-momentum oscillators because, with the motion-exaggerated visualisation enabled, we can see that they oscillate.

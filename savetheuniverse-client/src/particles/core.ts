@@ -1,10 +1,30 @@
 import { Ticker } from "../common/ticker";
-import { ParticleDetector, BoundaryDetector } from "./detect";
 import { BoundaryViz, ParticleViz } from "./viz";
+import { ParticleDetector, collideParticles } from "./particles";
+import { Boundary, collideBoundary } from "./boundary";
 import { Driver } from "./driver";
-import { collideParticles, collideBoundary } from "./collide";
 
-const { ceil, log2 } = Math;
+const { ceil, abs, min, max, log2 } = Math;
+
+const boundaries = {
+  circle(x: number, y: number) {
+    const r = 0.5;
+    const cx = -0.3;
+    const cy = 0;
+    return ((x - cx) ** 2 + (y - cy) ** 2) ** 0.5 - r;
+  },
+  box(x: number, y: number) {
+    const rx = -0.3;
+    const ry = 0;
+    const w = 0.65;
+    const h = 0.5;
+    x = abs(x - rx) - w;
+    y = abs(y - ry) - h;
+    const dx = max(x, 0);
+    const dy = max(y, 0);
+    return (dx ** 2 + dy ** 2) ** 0.5 + min(max(x, y), 0);
+  },
+};
 
 export class Core {
   simulationStepSize = 1;
@@ -23,8 +43,7 @@ export class Core {
     D_x: new Float64Array(),
     D_y: new Float64Array(),
   };
-  boundary = (() => 0) as (x: number, y: number) => number;
-  boundaryCollisionDetector: BoundaryDetector;
+  boundary: Boundary;
   particleCollisionDetector: ParticleDetector;
   boundaryViz: BoundaryViz;
   particleViz: ParticleViz;
@@ -33,7 +52,7 @@ export class Core {
     this.ticker = new Ticker(this.frame.bind(this), 1);
     this.boundaryViz = new BoundaryViz(this, container);
     this.particleViz = new ParticleViz(this, container);
-    this.boundaryCollisionDetector = new BoundaryDetector(this);
+    this.boundary = new Boundary(boundaries.circle);
     this.particleCollisionDetector = new ParticleDetector(this);
     driver.init(this);
   }
@@ -46,8 +65,6 @@ export class Core {
   updateParticleRadius(particleRadius: number) {
     this.particles.r = particleRadius;
     this.particleCollisionDetector.resize();
-    this.boundaryCollisionDetector.resize();
-    this.boundaryCollisionDetector.index();
     this.particleViz.draw();
   }
   // for updating particle positions / velocities and creating / destroying particles
@@ -75,9 +92,8 @@ export class Core {
     fn(initialCount, newCount);
     if (this.particleViz) this.particleViz.draw();
   }
-  updateBoundary(boundary: (x: number, y: number) => number) {
-    this.boundary = boundary;
-    this.boundaryCollisionDetector.index();
+  updateBoundary(sdf: (x: number, y: number) => number) {
+    this.boundary.init(sdf);
     this.boundaryViz.draw();
   }
   frame() {
@@ -92,7 +108,7 @@ export class Core {
       particles: { n, x_x, x_y, v_x, v_y },
       particleDisplacementBuffer: { D_x, D_y },
       particleCollisionDetector,
-      boundaryCollisionDetector,
+      boundary,
     } = this;
 
     // performance hack for filling typed arrays faster:
@@ -119,8 +135,13 @@ export class Core {
       x_y[i] += D_y[i];
     }
 
-    boundaryCollisionDetector.detect(
-      collideBoundary.bind(null, this.particles)
-    );
+    for (let i = 0; i < n; i++) {
+      boundary.collides(
+        x_x[i],
+        x_y[i],
+        this.particles.r,
+        collideBoundary.bind(null, this.particles, i)
+      );
+    }
   }
 }

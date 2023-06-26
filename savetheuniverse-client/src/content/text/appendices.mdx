@@ -1,0 +1,60 @@
+import { Link } from "react-router-dom";
+import { ParticleToyPseudoMomentum } from "../figures/ParticleToyPseudoMomentum";
+import { ParticleToyImageToBoundarySmoothing } from "../figures/ParticleToyImageToBoundarySmoothing";
+import { ParticleToyImageToBoundaryLookup } from "../figures/ParticleToyImageToBoundaryLookup";
+import { Figure } from "../ui/Figure";
+export const title = "Save the Universe Appendices";
+export const subtitle = (
+  <>
+    Appendices to{" "}
+    <Link to="/" className="text-[#005dff] italic">
+      Let Us Save the Universe!
+    </Link>
+  </>
+);
+export const byline = [
+  { label: "Author", value: "Ashton Six" },
+  { label: "Updated", value: "June 3, 2023" },
+];
+
+<div className="[grid-column-start:1] [grid-column-end:text-start] justify-self-end">
+	<nav className="toc">
+
+    ### Contents
+
+    - [Appendix overview](#overview)
+    - [Particle toy notes](#particle-toy)
+    - [Science communication](#science-communication)
+
+  </nav>
+</div>
+
+<div id="overview">
+
+Heck yes! Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book. It has survived not only five centuries, but also the leap into electronic typesetting, remaining essentially unchanged. It was popularised in the 1960s with the release of Letraset sheets containing Lorem Ipsum passages, and more recently with desktop publishing software like Aldus PageMaker including versions of Lorem Ipsum.
+
+</div>
+
+<h2 id="particle-toy">Particle toy notes</h2>
+
+The particle toy is
+
+<h3 id="toy-implementation">Creating boundaries from images</h3>
+
+For best results, use a 1024 x 1024 pixel image and avoid fine detail, that is, features with cross-sections measuring less than 8px across.
+
+Resize the image to 1024x1024 max size, convert to a 1-bit mask, add a border to ensure the boundary is closed. Apply difusion smoothing (repeated application of moving average with window size 2, equivalent to gaussian blur), and fit a $G_2$ continous curve to the polygon (uniform cubic B-spline). After diffusion smoothing only, the boundary may appear adequately smooth, but it is still made of stright line segments, and discontinuties in the normals can introduce numerical instability to the simulation. One may think of the diffusion smoothing as like coarse sandpaper, and the B-spline fitting like fine sandpaper.
+
+<Figure>
+  <ParticleToyImageToBoundarySmoothing />
+</Figure>
+
+Lorem Ipsum is simply dummy text of the printing and typesetting industry.
+
+<Figure>
+  <ParticleToyImageToBoundaryLookup />
+</Figure>
+
+<h2 id="science-communication">Science communication</h2>
+
+TODO

@@ -23,7 +23,7 @@ export class BoundaryViz {
     this.resizeObserver.disconnect();
   }
   draw() {
-    const sdf = this.core.boundary;
+    const { boundary } = this.core;
     const { height: h, width: w } = this.canvas;
     const l = max(w, h);
     const linv = 1 / l;
@@ -34,16 +34,15 @@ export class BoundaryViz {
           const x = (xi - w / 2) * linv * 2;
           const y = (yi - h / 2) * linv * 2;
           const inside =
-            +(sdf(x - linv, y - linv) > 0) +
-            +(sdf(x - linv, y + linv) > 0) +
-            +(sdf(x + linv, y - linv) > 0) +
-            +(sdf(x + linv, y + linv) > 0);
+            +(boundary.distance(x - linv, y - linv, 0) > 0) +
+            +(boundary.distance(x - linv, y + linv, 0) > 0) +
+            +(boundary.distance(x + linv, y - linv, 0) > 0) +
+            +(boundary.distance(x + linv, y + linv, 0) > 0);
           const v = [0, 255, 255, 255, 24][inside];
           // const v = (((sdf(x, y) * 200) % 128) + 128) % 128;
           if (inside === 0 || inside === 4) {
-            // optimise marching squares with inspiration from ray marching
-            // no need to resample the sdf for every pixel
-            const d = floor(abs(sdf(x, y) * l * 0.5) - 1);
+            // use ray marching optimisation to draw many pixels per boundary measurement
+            const d = floor(abs(boundary.distance(x, y, 0) * l * 0.5) - 1);
             const n = xi + min(w - xi, d);
             for (; xi < n; xi++) {
               const i = yi * w + xi;
@@ -60,7 +59,6 @@ export class BoundaryViz {
           img[i * 4 + 3] = 255;
         }
       }
-      for (let i = 0; i < h * w; i++) {}
     });
   }
 }
