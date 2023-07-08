@@ -49,7 +49,13 @@ Resize the image to 1024x1024 max size, convert to a 1-bit mask, add a border to
   <ParticleToyImageToBoundarySmoothing />
 </Figure>
 
-Lorem Ipsum is simply dummy text of the printing and typesetting industry.
+To detect collisions between particles and the boundary, and determine the exact contact point, we:
+
+1. Check a lookup table, that maps an approximate position to distance to the boundary. Exit if we know a collision won't occur.
+2. Check another lookup table, with 8 points on the boundary near the particle's approximate position. Take the closest. Exit if we know a collision won't occur.
+3. Take a segment of the boundary around the point taken in step 2, small enough that we can garuntee distance to the segment is a unimodal function, and perform 16 iterations of golden section search to find point on the segment closest to the particle.
+
+This technique gives a good balance between index performance, lookup performance and accuracy
 
 <Figure>
   <ParticleToyImageToBoundaryLookup />

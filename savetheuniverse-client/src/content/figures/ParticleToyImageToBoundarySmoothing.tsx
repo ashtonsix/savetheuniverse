@@ -219,7 +219,7 @@ export const ParticleToyImageToBoundarySmoothing = () => {
             value={smoothingIterations}
             onChange={(e) => setSmoothingIterations(+e.target.value)}
             min={0}
-            max={64}
+            max={128}
             step={1}
           />
         </label>

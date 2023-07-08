@@ -1,6 +1,6 @@
-import { Core } from "./core";
+import * as PIXI from "pixi.js";
 
-const { ceil, floor, min, sqrt } = Math;
+const { ceil, floor, min, max, sqrt, log2, atan2 } = Math;
 
 /**
  * \mathbf{J} = \frac{(1 + E)(\mathbf{x}_1 - \mathbf{x}_2)}{2} \frac{\langle \mathbf{v}_1 - \mathbf{v}_2, \mathbf{x}_1 - \mathbf{x}_2\rangle}{\langle \mathbf{x}_1 - \mathbf{x}_2, \mathbf{x}_1 - \mathbf{x}_2\rangle}, \\
@@ -9,8 +9,7 @@ const { ceil, floor, min, sqrt } = Math;
  * \mathbf{v}'_2 = S(\mathbf{v}_2 + \mathbf{J})
  */
 export function collideParticles(
-  particles: Core["particles"],
-  displacement: Core["particleDisplacementBuffer"],
+  particles: ParticleCollection,
   i: number,
   j: number
 ) {
@@ -37,10 +36,10 @@ export function collideParticles(
 
   // Store updated displacement in temporary buffer
   // It is not applied until all particle-particle collisions have been detected, to improve simulation accuracy
-  displacement.D_x[i] += D_x;
-  displacement.D_y[i] += D_y;
-  displacement.D_x[j] -= D_x;
-  displacement.D_y[j] -= D_y;
+  particles.D_x[i] += D_x;
+  particles.D_y[i] += D_y;
+  particles.D_x[j] -= D_x;
+  particles.D_y[j] -= D_y;
 
   // Get elasticity coefficient and particle velocities
   const E = particles.E;
@@ -83,6 +82,35 @@ export function collideParticles(
   return true;
 }
 
+export class ParticleCollection {
+  n = 0; // count
+  r = 1; // radius
+  E = 1; // elasticity
+  x_x = new Float64Array(); // position
+  x_y = new Float64Array();
+  v_x = new Float64Array(); // velocity
+  v_y = new Float64Array();
+  D_x = new Float64Array(); // displacement
+  D_y = new Float64Array();
+  updateCount(n: number) {
+    this.n = n;
+    const bufferAllocation = 2 ** ceil(log2(n ?? 0));
+    if (bufferAllocation > this.x_x.length) {
+      const { x_x, x_y, v_x, v_y } = this;
+      this.x_x = new Float64Array(bufferAllocation);
+      this.x_y = new Float64Array(bufferAllocation);
+      this.v_x = new Float64Array(bufferAllocation);
+      this.v_y = new Float64Array(bufferAllocation);
+      this.D_x = new Float64Array(bufferAllocation);
+      this.D_y = new Float64Array(bufferAllocation);
+      this.x_x.set(x_x);
+      this.x_y.set(x_y);
+      this.v_x.set(v_x);
+      this.v_y.set(v_y);
+    }
+  }
+}
+
 // Using the cell grid technique often used in molecular dynamics
 export class ParticleDetector {
   grid = new Int32Array();
@@ -93,11 +121,11 @@ export class ParticleDetector {
   indexToCoordWeight = 1;
   indexToCoordBias = -1;
   cellAllocation = 8;
-  constructor(public core: Core) {
+  constructor(public particles: ParticleCollection) {
     this.resize();
   }
   index() {
-    const { n, x_x, x_y } = this.core.particles;
+    const { n, x_x, x_y } = this.particles;
     let {
       grid: g,
       gridLength,
@@ -118,7 +146,7 @@ export class ParticleDetector {
     }
   }
   detect(callback: (i: number, j: number) => void) {
-    const { n, x_x, x_y } = this.core.particles;
+    const { n, x_x, x_y } = this.particles;
     let {
       grid: g,
       gridLength: gl,
@@ -166,8 +194,8 @@ export class ParticleDetector {
     new Int8Array(this.grid.buffer).fill(0);
   }
   resize() {
-    // 1.0001 multiplier is there to protect against floating point precision issues
-    this.cellSize = this.core.particles.r * 2 * 1.0001;
+    // 1.0001 multiplier is to protect against floating point precision issues
+    this.cellSize = this.particles.r * 2 * 1.0001;
     this.gridLength = ceil(2 / this.cellSize);
     // 0 -> this.gridLength/2
     //
@@ -182,5 +210,76 @@ export class ParticleDetector {
     if (gridAllocation > this.grid.length) {
       this.grid = new Int32Array(gridAllocation);
     }
+  }
+}
+
+export class ParticleViz {
+  app: PIXI.Application<PIXI.ICanvas>;
+  spriteContainer: PIXI.ParticleContainer;
+  sprites: PIXI.Sprite[] = [];
+  container: HTMLDivElement;
+  resizeObserver: ResizeObserver;
+  constructor(
+    public particles: ParticleCollection,
+    public outerContainer: HTMLElement
+  ) {
+    this.container = document.createElement("div");
+    this.container.className = "absolute inset-0";
+    this.outerContainer.appendChild(this.container);
+    this.app = new PIXI.Application({
+      backgroundAlpha: 0,
+      resizeTo: this.container,
+      preserveDrawingBuffer: true,
+    });
+    this.container.appendChild(this.app.view as HTMLCanvasElement);
+    const options = {
+      scale: true,
+      position: true,
+      rotation: true,
+      uvs: true,
+      alpha: true,
+    };
+    PIXI.Ticker.shared.autoStart = false;
+    PIXI.Ticker.shared.stop();
+
+    this.spriteContainer = new PIXI.ParticleContainer(262144, options);
+
+    this.app.stage.addChild(this.spriteContainer);
+    this.resizeObserver = new ResizeObserver(() => this.draw());
+    this.resizeObserver.observe(this.container);
+  }
+  destroy() {
+    this.resizeObserver.disconnect();
+    this.app.destroy();
+  }
+  draw() {
+    const scale = max(this.app.screen.width, this.app.screen.height) / 2;
+    const biasX = this.app.screen.width / 2;
+    const biasY = this.app.screen.height / 2;
+    const { n, r, x_x, x_y, v_y, v_x } = this.particles;
+    const spriteLength = r * 2 * scale;
+    // create sprites
+    for (let i = this.sprites.length; i < n; i++) {
+      const sprite = PIXI.Sprite.from("/arrow.png");
+      sprite.anchor.set(0.5);
+      this.sprites.push(sprite);
+      this.spriteContainer.addChild(sprite);
+    }
+    // destroy sprites
+    for (let i = this.sprites.length - 1; i > n; i--) {
+      const sprite = this.sprites.pop()!;
+      sprite.destroy();
+    }
+    // update sprites
+    for (let i = 0; i < n; i++) {
+      const sprite = this.sprites[i];
+      sprite.x = x_x[i] * scale + biasX;
+      sprite.y = x_y[i] * scale + biasY;
+      sprite.width = spriteLength;
+      sprite.height = spriteLength;
+      sprite.rotation = atan2(v_y[i], v_x[i]);
+    }
+    PIXI.Ticker.shared.update(performance.now());
+    this.app.renderer.render(this.app.stage);
   }
 }

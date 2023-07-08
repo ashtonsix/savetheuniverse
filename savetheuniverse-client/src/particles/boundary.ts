@@ -1,5 +1,21 @@
+import Canvas from "../common/canvas";
 import { allXY } from "../common/grid-utils";
+import {
+  imageToMask,
+  maskToPolygons,
+  rescalePolygons,
+  Spline,
+  smoothPolygon,
+  polygonToBSplineCoeffcients,
+  splinesToSampleLookupTable,
+  Image,
+  closestPointOnBoundary,
+  evaluateBSpline,
+} from "./boundary-image";
 import { Core } from "./core";
+
+const { max, floor, abs, sign } = Math;
+type SDF = (x: number, y: number) => number;
 
 export function collideBoundary(
   particles: Core["particles"],
@@ -25,10 +41,6 @@ const approxLookupTableSz = 1024;
 const approxLookupTableHalfSz = approxLookupTableSz / 2;
 const approxError = (4 * 2 ** 0.5) / approxLookupTableSz;
 
-const { floor, abs } = Math;
-
-type SDF = (x: number, y: number) => number;
-
 export class Boundary {
   area = 0;
   private approxLookupTable = new Float64Array(approxLookupTableSz ** 2);
@@ -36,15 +48,10 @@ export class Boundary {
   private collidesImplReg = [0, 0, 0];
   private collidesImpl: (x: number, y: number, r: number) => number[] | null =
     () => null;
-  constructor(blobOrSdf: Blob | SDF) {
-    this.init(blobOrSdf);
-  }
-  init(blobOrSdf: Blob | SDF) {
+  async update(imgOrSdf: Image | SDF) {
     // initialise underlying implementations for distance and collision
-    if (blobOrSdf instanceof Blob) {
-      const blob = blobOrSdf;
-    } else {
-      const sdf = blobOrSdf;
+    if (imgOrSdf instanceof Function) {
+      const sdf = imgOrSdf;
       this.distanceImpl = sdf;
       this.collidesImpl = (x, y, r) => {
         const d = sdf(x, y);
@@ -55,6 +62,50 @@ export class Boundary {
         this.collidesImplReg[0] = d;
         this.collidesImplReg[1] = ddx * norm;
         this.collidesImplReg[2] = ddy * norm;
+        return this.collidesImplReg;
+      };
+    } else {
+      const img = imgOrSdf;
+      const mask = imageToMask(img);
+      const polygons = maskToPolygons(mask);
+      rescalePolygons(polygons);
+      const spl: Spline[] = [];
+      for (let p of polygons) {
+        smoothPolygon(p, 128);
+        spl.push(polygonToBSplineCoeffcients(p));
+      }
+      const resolution = 64;
+      const tbl = splinesToSampleLookupTable(spl, resolution);
+      this.distanceImpl = (x1, y1) => {
+        const [si, t, x2, y2] = closestPointOnBoundary(spl, tbl, x1, y1, 0);
+        const d = ((x1 - x2) ** 2 + (y1 - y2) ** 2) ** 0.5;
+
+        const [x3, y3] = evaluateBSpline(spl[si], t - 1e-5);
+        const [x4, y4] = evaluateBSpline(spl[si], t + 1e-5);
+        const ddx = x3 - x4;
+        const ddy = y3 - y4;
+        const norm = 1 / (ddx ** 2 + ddy ** 2) ** 0.5;
+        const nx = ddy * -norm;
+        const ny = ddy * norm;
+        const inside = sign(nx * x1 + ny * y1);
+
+        return d * inside;
+      };
+      this.collidesImpl = (x1, y1, r) => {
+        const [si, t, x2, y2] = closestPointOnBoundary(spl, tbl, x1, y1, r);
+        const d = ((x1 - x2) ** 2 + (y1 - y2) ** 2) ** 0.5;
+        if (d < -r) return null;
+        const [x3, y3] = evaluateBSpline(spl[si], t - 1e-5);
+        const [x4, y4] = evaluateBSpline(spl[si], t + 1e-5);
+        const ddx = x3 - x4;
+        const ddy = y3 - y4;
+        const norm = 1 / (ddx ** 2 + ddy ** 2) ** 0.5;
+        const nx = ddy * norm;
+        const ny = ddx * norm;
+        const inside = sign(nx * x1 + ny * y1);
+        this.collidesImplReg[0] = d * inside;
+        this.collidesImplReg[1] = nx;
+        this.collidesImplReg[2] = ny;
         return this.collidesImplReg;
       };
     }
@@ -127,5 +178,64 @@ export class Boundary {
         return this.sampleInsideReg;
       }
     }
+  }
+}
+
+export class BoundaryViz {
+  canvas: Canvas;
+  container: HTMLDivElement;
+  resizeObserver: ResizeObserver;
+  constructor(public boundary: Boundary, public outerContainer: HTMLElement) {
+    this.container = document.createElement("div");
+    this.container.className = "absolute inset-0";
+    this.outerContainer.appendChild(this.container);
+    this.canvas = new Canvas(this.container, 1);
+    this.resizeObserver = new ResizeObserver(() => {
+      this.canvas.resize();
+      this.draw();
+    });
+    this.resizeObserver.observe(this.container);
+  }
+  destroy() {
+    this.resizeObserver.disconnect();
+  }
+  draw() {
+    const boundary = this.boundary;
+    const { height: h, width: w } = this.canvas;
+    const l = max(w, h);
+    const linv = 1 / l;
+
+    this.canvas.draw((img: Uint8ClampedArray) => {
+      for (let yi = 0; yi < h; yi++) {
+        for (let xi = 0; xi < w; xi++) {
+          const x = (xi - w / 2) * linv * 2;
+          const y = (yi - h / 2) * linv * 2;
+          const inside =
+            +(boundary.distance(x - linv, y - linv, 0) < 0) +
+            +(boundary.distance(x - linv, y + linv, 0) < 0) +
+            +(boundary.distance(x + linv, y - linv, 0) < 0) +
+            +(boundary.distance(x + linv, y + linv, 0) < 0);
+          const v = [0, 255, 255, 255, 24][inside];
+          // const v = (((sdf(x, y) * 200) % 128) + 128) % 128;
+          // if (inside === 0 || inside === 4) {
+          //   // use ray marching optimisation to draw many pixels per boundary measurement
+          //   const d = floor(abs(boundary.distance(x, y, 0) * l * 0.5) - 1);
+          //   const n = xi + min(w - xi, d);
+          //   for (; xi < n; xi++) {
+          //     const i = yi * w + xi;
+          //     img[i * 4 + 0] = v;
+          //     img[i * 4 + 1] = v;
+          //     img[i * 4 + 2] = v;
+          //     img[i * 4 + 3] = 255;
+          //   }
+          // }
+          const i = yi * w + xi;
+          img[i * 4 + 0] = v;
+          img[i * 4 + 1] = v;
+          img[i * 4 + 2] = v;
+          img[i * 4 + 3] = 255;
+        }
+      }
+    });
   }
 }

@@ -20,15 +20,27 @@ export type Spline = {
   y: number[];
 };
 
-const { min, max, abs, floor } = Math;
+export type SampleLookupTable = {
+  lookupTable: Int32Array;
+  samples: number[];
+  sz: number;
+  halfSz: number;
+};
 
-// 2+JFA+2, which has fewer innacurracies than plain JFA
+const { min, max, floor, abs, sign, sqrt, random } = Math;
+const INVPHI = (sqrt(5) - 1) / 2; // 1 / phi
+const INVPHI2 = (3 - sqrt(5)) / 2; // 1 / phi^2
+
+// JFA with additional steps yielded to improve accuracy
+// this particular pattern of steps was the result of trial-and-error testing
 function* jfaSteps(n: number) {
-  yield 1;
-  for (let i = n / 2; i >= 1; n /= 2) {
+  for (let i = n / 2; i >= 1; i /= 2) {
+    yield i;
+    yield 1;
+  }
+  for (let i = n / 32; i >= 1; i /= 2) {
     yield i;
   }
-  yield 1;
   yield 1;
 }
 
@@ -197,7 +209,7 @@ export function maskToPolygons(mask: Image) {
 }
 
 // smooth polygon with diffusion method
-// should be equivalent to gaussian filter
+// mathematically equivalent to gaussian filter as # iterations approaches infinity
 export function smoothPolygon(polygon: Polygon, iterations = 32) {
   let polygonx = polygon.x;
   let polygony = polygon.y;
@@ -285,7 +297,7 @@ export function evaluateBSpline(
 ) {
   let coefsx = bSplineCoeffcients.x;
   let coefsy = bSplineCoeffcients.y;
-  let i = (floor(t) * 4) % coefsx.length;
+  let i = (floor(t) * 4 + coefsx.length) % coefsx.length;
 
   let t1 = t % 1;
   let t2 = t1 * t1;
@@ -298,9 +310,11 @@ export function evaluateBSpline(
   return evaluateBSplineReg;
 }
 
-export function splinesToSegmentLookupTable(splines: Spline[], sz = 4096) {
+// each entry in the lookup table shall have 8 samples, where each sample has format [spline, t, x, y]
+// x & y are the result of precomputing evaluateBSpline(splines[spline], t)
+export function splinesToSampleLookupTable(splines: Spline[], sz = 1024) {
   const halfSz = sz / 2;
-  const segments: number[] = [];
+  const samples: number[] = [];
 
   // segment splines using bisection search
   for (let s = 0; s < splines.length; s++) {
@@ -315,6 +329,7 @@ export function splinesToSegmentLookupTable(splines: Spline[], sz = 4096) {
       x1 = floor(x1 * halfSz + halfSz);
       y1 = floor(y1 * halfSz + halfSz);
 
+      // maybe extend hi, to ensure junction is included in search space
       while (true) {
         let [x2, y2] = evaluateBSpline(spline, hi);
         x2 = floor(x2 * halfSz + halfSz);
@@ -328,6 +343,7 @@ export function splinesToSegmentLookupTable(splines: Spline[], sz = 4096) {
         let [x2, y2] = evaluateBSpline(spline, mid);
         x2 = floor(x2 * halfSz + halfSz);
         y2 = floor(y2 * halfSz + halfSz);
+        // looking for exact point where we cross from one cell in lookup table to the next
         if (x1 !== x2 || y1 !== y2) {
           hi = mid;
         } else {
@@ -341,29 +357,30 @@ export function splinesToSegmentLookupTable(splines: Spline[], sz = 4096) {
       hi = lo + 1;
     }
 
-    // pick junctions such that segments of distance <= 3 from each other overlap
+    // pick points for multi-start optimisation using junction midpoints
     for (let i = 0; i < junctions.length; i++) {
-      let j0 = junctions[(i + junctions.length - 1) % junctions.length];
-      let j3 = junctions[(i + 2) % junctions.length];
-      let d = abs(j3 - j0) * 0.001;
-      let a = j0 - d;
-      let b = j3 + d;
-      segments.push(s, a, b, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1);
+      let j0 = junctions[i];
+      let j1 = junctions[(i + 1) % junctions.length];
+      let t = (j0 + j1) * 0.5;
+      if (i + 1 === junctions.length) t += maxT * 0.5; // edge case for average of modular numbers
+      let [x, y] = evaluateBSpline(spline, t);
+
+      // make space for the eight samples that will eventually be stored in each lookup table entry
+      samples.push(s, t, x, y, -1, -1, -1, -1);
+      samples.push(-1, -1, -1, -1, -1, -1, -1, -1);
+      samples.push(-1, -1, -1, -1, -1, -1, -1, -1);
+      samples.push(-1, -1, -1, -1, -1, -1, -1, -1);
     }
   }
 
   // add seeds to lookup table
   let lookupTable = new Int32Array(sz ** 2).fill(-1);
-  let midpointsx: number[] = [];
-  let midpointsy: number[] = [];
-  for (let s = 0; s < segments.length; s += 13) {
-    let t = (segments[s + 1] + segments[s + 2]) / 2;
-    let [x, y] = evaluateBSpline(splines[segments[s]], t);
-    midpointsx.push(x);
-    midpointsy.push(y);
+  for (let s = 0; s < samples.length; s += 32) {
+    let x = samples[s + 2];
+    let y = samples[s + 3];
     x = floor(x * halfSz + halfSz);
     y = floor(y * halfSz + halfSz);
-    lookupTable[y * sz + sz] = s;
+    lookupTable[y * sz + x] = s;
   }
 
   // fill lookup table using jump flood algorithm
@@ -371,23 +388,24 @@ export function splinesToSegmentLookupTable(splines: Spline[], sz = 4096) {
   for (let step of jfaSteps(sz)) {
     for (let [x1, y1, i1] of allXY(sz, sz)) {
       let best = lookupTable[i1];
-      let dx = midpointsx[best] - (x1 / halfSz - 1);
-      let dy = midpointsx[best] - (y1 / halfSz - 1);
-      let dist = best === -1 ? Infinity : dx ** 2 + dy ** 2;
+      let dx = samples[best + 2] - (x1 / halfSz - 1);
+      let dy = samples[best + 3] - (y1 / halfSz - 1);
+      let distSquared = best === -1 ? Infinity : dx ** 2 + dy ** 2;
 
       for (let dir = 0; dir < 4; dir++) {
-        let x2 = x1 + (dir & 1 ? step : -step);
-        let y2 = y1 + (dir & 2 ? step : -step);
+        // dir&1 = orientation, (dir&2)-1 = sign
+        let x2 = x1 + (dir & 1) * ((dir & 2) - 1) * step;
+        let y2 = y1 + +!(dir & 1) * ((dir & 2) - 1) * step;
         if (x2 < 0 || x2 >= sz || y2 < 0 || y2 >= sz) continue;
         let i2 = y2 * sz + x2;
         let c = lookupTable[i2];
         if (c === -1) continue;
-        let dx = midpointsx[c] - (x2 / halfSz - 1);
-        let dy = midpointsx[c] - (y2 / halfSz - 1);
-        let test = dx ** 2 + dy ** 2;
-        if (test < dist) {
+        let dx2 = samples[c + 2] - (x1 / halfSz - 1);
+        let dy2 = samples[c + 3] - (y1 / halfSz - 1);
+        let test = dx2 ** 2 + dy2 ** 2;
+        if (test < distSquared) {
           best = c;
-          dist = test;
+          distSquared = test;
         }
       }
 
@@ -399,57 +417,197 @@ export function splinesToSegmentLookupTable(splines: Spline[], sz = 4096) {
     buffer = tmp;
   }
 
-  // create banks of 4 segments from neighbouring cells in lookup table
+  // expand number of samples per lookup table entry from 1 to 8, using samples from
+  // surrounding lookup table entries and then duplicating the samples
+  const combinations: Record<string, number> = {};
+  const combinationReg = new Int32Array(4);
+  // copy from surrounding lookup table entries
+  for (let [tl, tr, bl, br] of marchingSquares(sz, sz)) {
+    // the last row / column of the lookup table will have a slightly worse selection of
+    // samples as an artifact of the marching squares algorithm, but it's not a big deal
+    combinationReg[0] = lookupTable[tl];
+    combinationReg[1] = lookupTable[tr];
+    combinationReg[2] = lookupTable[bl];
+    combinationReg[3] = lookupTable[br];
+    // in the v8 JavaScript engine, calling .sort() on a typed array is 10x faster
+    // than calling .sort() on a regular array so long as the array is small and a
+    // comparison function is not provided. it will use C++ std::sort, which includes
+    // specific optimisations for small arrays: https://reviews.llvm.org/D118029
+    combinationReg.sort();
+    if (combinationReg[0] === combinationReg[3]) {
+      buffer[tl] = lookupTable[tl];
+      continue;
+    }
+    const key = combinationReg.join(".");
+    if (combinations[key]) {
+      buffer[tl] = combinations[key];
+      continue;
+    }
+    combinations[key] = samples.length;
+    buffer[tl] = combinations[key];
+    let s0 = samples[lookupTable[tl]];
+    let t0 = samples[lookupTable[tl] + 1];
+    let s1 = samples[lookupTable[tr]];
+    let t1 = samples[lookupTable[tr] + 1];
+    let s2 = samples[lookupTable[bl]];
+    let t2 = samples[lookupTable[bl] + 1];
+    let s3 = samples[lookupTable[br]];
+    let t3 = samples[lookupTable[br] + 1];
+    samples.push(s0, t0, -1, -1, s1, t1, -1, -1);
+    samples.push(s2, t2, -1, -1, s3, t3, -1, -1);
+    samples.push(-1, -1, -1, -1, -1, -1, -1, -1);
+    samples.push(-1, -1, -1, -1, -1, -1, -1, -1);
+  }
 
-  // deduplicate overlapping segments in segment banks
+  lookupTable = buffer;
+  // duplicate samples
+  for (let i = 0; i < samples.length; i += 32) {
+    if (samples[i + 4] === -1) {
+      samples[i + 4] = samples[i];
+      samples[i + 5] = samples[i + 1];
+      samples[i + 8] = samples[i];
+      samples[i + 9] = samples[i + 1];
+      samples[i + 12] = samples[i];
+      samples[i + 13] = samples[i + 1];
+    }
+    samples[i + 16] = samples[i];
+    samples[i + 17] = samples[i + 1];
+    samples[i + 20] = samples[i + 4];
+    samples[i + 21] = samples[i + 5];
+    samples[i + 24] = samples[i + 8];
+    samples[i + 25] = samples[i + 9];
+    samples[i + 28] = samples[i + 12];
+    samples[i + 29] = samples[i + 13];
+  }
+  // add random deltas to $t$ preventing overlaps
+  for (let i = 1; i < samples.length; i += 4) {
+    samples[i] += random() * 0.0002 - 0.0001;
+  }
 
-  return { lookupTable, segments };
+  // space samples within each lookup table entry so they are t>=2 apart
+  for (let iter = 0; iter < 32; iter++) {
+    let deltas = new Float64Array(8);
+    let step = 0.5;
+    let minD = 2;
+    for (let first = 0; first < samples.length; first += 32) {
+      deltas.fill(0);
+      for (let a = 0; a < 8; a++) {
+        for (let b = 0; b < 8; b++) {
+          if (a <= b) continue;
+          let d = samples[first + a * 4 + 1] - samples[first + b * 4 + 1];
+          const delta = max(minD - abs(d), 0) * sign(d) * step;
+          deltas[a] += delta;
+          deltas[b] -= delta;
+        }
+      }
+      for (let i = 0; i < 8; i++) {
+        samples[first + i * 4 + 1] += deltas[i];
+      }
+    }
+  }
+  // spacing adjustment breaks space modularity for some samples. fix it here
+  for (let i = 0; i < samples.length; i += 4) {
+    const spline = splines[samples[i]];
+    samples[i + 1] = (samples[i + 1] + spline.x.length) % spline.x.length;
+  }
+
+  // precompute coordinates for each sample
+  for (let i = 0; i < samples.length; i += 4) {
+    const spline = splines[samples[i]];
+    const t = samples[i + 1];
+    let [x, y] = evaluateBSpline(spline, t);
+    if (isNaN(x) || isNaN(y)) {
+      debugger;
+    }
+    samples[i + 2] = x;
+    samples[i + 3] = y;
+  }
+
+  return { lookupTable, sz, halfSz, samples } as SampleLookupTable;
 }
 
-// export function getDistanceToBoundary(arr: number[]) {
-//   // get 4 ranges and deduplicate
+// returns [s, t, x, y], approx if not within r
+let closestPointOnBoundaryReg = [0, 0, 0, 0];
+export function closestPointOnBoundary(
+  splines: Spline[],
+  sampleLookupTable: SampleLookupTable,
+  x: number,
+  y: number,
+  r: number
+) {
+  let { lookupTable, samples, sz, halfSz } = sampleLookupTable;
+  let yi = max(min(floor(y * halfSz + halfSz), sz - 1), 0);
+  let xi = max(min(floor(x * halfSz + halfSz), sz - 1), 0);
+  let offset = lookupTable[yi * sz + xi];
 
-//   let tmp;
+  // get closest sample from lookup table entry
+  let mindex = 0;
+  let minval = (samples[offset + 2] - x) ** 2 + (samples[offset + 3] - y) ** 2;
+  let test = (samples[offset + 6] - x) ** 2 + (samples[offset + 7] - y) ** 2;
+  if (test < minval) (mindex = 4), (minval = test);
+  test = (samples[offset + 10] - x) ** 2 + (samples[offset + 11] - y) ** 2;
+  if (test < minval) (mindex = 8), (minval = test);
+  test = (samples[offset + 14] - x) ** 2 + (samples[offset + 15] - y) ** 2;
+  if (test < minval) (mindex = 12), (minval = test);
+  test = (samples[offset + 18] - x) ** 2 + (samples[offset + 19] - y) ** 2;
+  if (test < minval) (mindex = 16), (minval = test);
+  test = (samples[offset + 22] - x) ** 2 + (samples[offset + 23] - y) ** 2;
+  if (test < minval) (mindex = 20), (minval = test);
+  test = (samples[offset + 26] - x) ** 2 + (samples[offset + 27] - y) ** 2;
+  if (test < minval) (mindex = 24), (minval = test);
+  test = (samples[offset + 30] - x) ** 2 + (samples[offset + 31] - y) ** 2;
+  if (test < minval) (mindex = 28), (minval = test);
+  offset += mindex;
 
-//   tmp = arr[0] < arr[1] ? arr[0] : arr[1];
-//   arr[1] = arr[0] < arr[1] ? arr[1] : arr[0];
-//   arr[0] = tmp;
+  // if (1 > 0) {
+  //   closestPointOnBoundaryReg[0] = samples[offset + 0];
+  //   closestPointOnBoundaryReg[1] = samples[offset + 1];
+  //   closestPointOnBoundaryReg[2] = samples[offset + 2];
+  //   closestPointOnBoundaryReg[3] = samples[offset + 3];
+  //   return closestPointOnBoundaryReg;
+  // }
 
-//   tmp = arr[2] < arr[3] ? arr[2] : arr[3];
-//   arr[3] = arr[2] < arr[3] ? arr[3] : arr[2];
-//   arr[2] = tmp;
+  let splinedex = samples[offset];
+  let spline = splines[splinedex];
+  let t = samples[offset + 1];
+  let a = t - 1;
+  let b = t + 1;
 
-//   tmp = arr[0] < arr[2] ? arr[0] : arr[2];
-//   arr[2] = arr[0] < arr[2] ? arr[2] : arr[0];
-//   arr[0] = tmp;
+  let h = b - a;
 
-//   tmp = arr[1] < arr[3] ? arr[1] : arr[3];
-//   arr[3] = arr[1] < arr[3] ? arr[3] : arr[1];
-//   arr[1] = tmp;
+  let c = a + INVPHI2 * h;
+  let d = a + INVPHI * h;
+  let ev = evaluateBSpline(spline, c);
+  let yc = (ev[0] - x) ** 2 + (ev[1] - y) ** 2;
+  ev = evaluateBSpline(spline, d);
+  let yd = (ev[0] - x) ** 2 + (ev[1] - y) ** 2;
 
-//   tmp = arr[1] < arr[2] ? arr[1] : arr[2];
-//   arr[2] = arr[1] < arr[2] ? arr[2] : arr[1];
-//   arr[1] = tmp;
+  for (let k = 0; k < 20; k++) {
+    if (yc < yd) {
+      b = d;
+      d = c;
+      yd = yc;
+      h = INVPHI * h;
+      c = a + INVPHI2 * h;
+      ev = evaluateBSpline(spline, c);
+      yc = (ev[0] - x) ** 2 + (ev[1] - y) ** 2;
+    } else {
+      a = c;
+      c = d;
+      yc = yd;
+      h = INVPHI * h;
+      d = a + INVPHI * h;
+      ev = evaluateBSpline(spline, d);
+      yd = (ev[0] - x) ** 2 + (ev[1] - y) ** 2;
+    }
+  }
 
-//   const ranges: number[][] = [];
+  t = yc < yd ? (a + d) / 2 : (c + b) / 2;
+  ev = evaluateBSpline(spline, t);
+  closestPointOnBoundaryReg[0] = splinedex;
+  closestPointOnBoundaryReg[1] = t;
+  closestPointOnBoundaryReg[2] = ev[0];
+  closestPointOnBoundaryReg[3] = ev[1];
 
-//   // ranges.sort((a, b) => a[0] - b[0]);
-
-//   const result = [ranges[0]];
-
-//   for (let i = 1; i < ranges.length; i++) {
-//     const lastRange = result[result.length - 1];
-//     const currentRange = ranges[i];
-
-//     // If the current range overlaps with the last range in the result
-//     if (currentRange[0] <= lastRange[1]) {
-//       // Update the end of the last range in the result
-//       lastRange[1] = max(lastRange[1], currentRange[1]);
-//     } else {
-//       // Add the current range to the result
-//       result.push(currentRange);
-//     }
-//   }
-
-//   return result;
-// }
+  return closestPointOnBoundaryReg;
+}

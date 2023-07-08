@@ -1,7 +1,7 @@
 import GUI, { Controller } from "lil-gui";
 import { Core } from "./core";
 
-const { random, floor, max, cos, sin, PI, E } = Math;
+const { random, floor, cos, sin, PI, E } = Math;
 
 function updateDisplay(gui: GUI, ...controllers: string[]) {
   let set = new Set(controllers);
@@ -63,32 +63,6 @@ export class Driver {
       });
     },
   };
-  boundary = {
-    smoothing: 0,
-    shapeCount: 0,
-    "add shape": () => {
-      const all = this.boundary.shapes;
-      const last = all[all.length - 1];
-      const shape = last
-        ? this.addBoundaryShape(
-            true,
-            max(0.1, last.r - 0.1),
-            last.cx + 0.3,
-            last.cy + 0.1
-          )
-        : this.addBoundaryShape(true, -0.3, 0, 0.5);
-      this.updateBoundary();
-      shape.gui.onFinishChange(this.updateBoundary.bind(this));
-    },
-    shapes: [] as {
-      solid: boolean;
-      cx: number;
-      cy: number;
-      r: number;
-      gui: GUI;
-      "remove shape": () => void;
-    }[],
-  };
   constructor(public container: HTMLElement) {
     this.gui.root = new GUI({ container });
     this.core = null as unknown as Core;
@@ -145,39 +119,9 @@ export class Driver {
     particles.add(this.particles, "reset");
     particles.add(this.particles, "randomise");
     particles.add(this.particles, "reverse");
-
-    this.gui.boundary = this.gui.root.addFolder("Boundary");
-    const boundary = this.gui.boundary;
-    boundary.close();
-    boundary.onFinishChange(this.updateBoundary.bind(this));
-    boundary.add(this.boundary, "smoothing", 0, 0.1);
-    boundary.add(this.boundary, "add shape");
-    this.boundary["add shape"]();
   }
   destroy() {
     this.gui.root.destroy();
-  }
-  addBoundaryShape(solid: boolean, cx: number, cy: number, r: number) {
-    const shapes = this.boundary.shapes;
-    const shape = {
-      gui: this.gui.boundary.addFolder(`shape ${++this.boundary.shapeCount}`),
-      solid,
-      r,
-      cx,
-      cy,
-      "remove shape": () => {
-        shape.gui.destroy();
-        shapes.splice(shapes.indexOf(shape), 1);
-        this.updateBoundary();
-      },
-    };
-    shape.gui.add(shape, "solid");
-    shape.gui.add(shape, "cx", -1, 1);
-    shape.gui.add(shape, "cy", -1, 1);
-    shape.gui.add(shape, "r", 0, 1);
-    shape.gui.add(shape, "remove shape");
-    shapes.push(shape);
-    return shape;
   }
   countToDensity(value?: number) {
     const p = this.particles;
@@ -232,15 +176,6 @@ export class Driver {
   }
   updateBoundary() {
     if (!this.core) return;
-    // const solid: number[][] = [];
-    // const hole: number[][] = [];
-    // for (const s of b.shapes) {
-    //   if (s.solid) solid.push([s.cx, s.cy, s.r]);
-    //   else hole.push([s.cx, s.cy, s.r]);
-    // }
-    // const sdf = distanceFunctionFactory(solid, hole, b.smoothing);
-    // this.core.updateBoundary(sdf);
-    this.boundaryArea = this.core.boundary.area;
     if (this.particles.count) this.particles.density = this.countToDensity();
     this.guic.particleCount.max(this.densityToCount(maxDensity));
     updateDisplay(this.gui.particles, "count", "density");

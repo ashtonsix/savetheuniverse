@@ -1,11 +1,16 @@
 import { Ticker } from "../common/ticker";
-import { BoundaryViz, ParticleViz } from "./viz";
-import { ParticleDetector, collideParticles } from "./particles";
-import { Boundary, collideBoundary } from "./boundary";
+import {
+  collideParticles,
+  ParticleCollection,
+  ParticleDetector,
+  ParticleViz,
+} from "./particles";
+import { collideBoundary, Boundary, BoundaryViz } from "./boundary";
 import { Driver } from "./driver";
 
-const { ceil, abs, min, max, log2 } = Math;
+const { abs, min, max } = Math;
 
+// more here: https://iquilezles.org/articles/distfunctions2d/
 const boundaries = {
   circle(x: number, y: number) {
     const r = 0.5;
@@ -30,19 +35,7 @@ export class Core {
   simulationStepSize = 1;
   simulationStepsPerFrame = 1;
   ticker = new Ticker(() => {}, 1000 / 60);
-  particles = {
-    n: 0, // count
-    r: 1, // radius
-    E: 1, // elasticity
-    x_x: new Float64Array(),
-    x_y: new Float64Array(),
-    v_x: new Float64Array(),
-    v_y: new Float64Array(),
-  };
-  particleDisplacementBuffer = {
-    D_x: new Float64Array(),
-    D_y: new Float64Array(),
-  };
+  particles = new ParticleCollection();
   boundary: Boundary;
   particleCollisionDetector: ParticleDetector;
   boundaryViz: BoundaryViz;
@@ -50,10 +43,11 @@ export class Core {
 
   constructor(public driver: Driver, public container: HTMLElement) {
     this.ticker = new Ticker(this.frame.bind(this), 1);
-    this.boundaryViz = new BoundaryViz(this, container);
-    this.particleViz = new ParticleViz(this, container);
-    this.boundary = new Boundary(boundaries.circle);
-    this.particleCollisionDetector = new ParticleDetector(this);
+    this.boundary = new Boundary();
+    this.boundary.update(boundaries.circle);
+    this.boundaryViz = new BoundaryViz(this.boundary, container);
+    this.particleViz = new ParticleViz(this.particles, container);
+    this.particleCollisionDetector = new ParticleDetector(this.particles);
     driver.init(this);
   }
   destroy() {
@@ -74,26 +68,12 @@ export class Core {
   ) {
     let initialCount = this.particles.n;
     newCount = newCount || initialCount;
-    this.particles.n = newCount;
-    const bufferAllocation = 2 ** ceil(log2(newCount ?? 0));
-    if (bufferAllocation > this.particles.x_x.length) {
-      const { x_x, x_y, v_x, v_y } = this.particles;
-      this.particles.x_x = new Float64Array(bufferAllocation);
-      this.particles.x_y = new Float64Array(bufferAllocation);
-      this.particles.v_x = new Float64Array(bufferAllocation);
-      this.particles.v_y = new Float64Array(bufferAllocation);
-      this.particles.x_x.set(x_x);
-      this.particles.x_y.set(x_y);
-      this.particles.v_x.set(v_x);
-      this.particles.v_y.set(v_y);
-      this.particleDisplacementBuffer.D_x = new Float64Array(bufferAllocation);
-      this.particleDisplacementBuffer.D_y = new Float64Array(bufferAllocation);
-    }
+    this.particles.updateCount(newCount);
     fn(initialCount, newCount);
     if (this.particleViz) this.particleViz.draw();
   }
   updateBoundary(sdf: (x: number, y: number) => number) {
-    this.boundary.init(sdf);
+    this.boundary.update(sdf);
     this.boundaryViz.draw();
   }
   frame() {
@@ -105,8 +85,7 @@ export class Core {
   step() {
     let {
       simulationStepSize,
-      particles: { n, x_x, x_y, v_x, v_y },
-      particleDisplacementBuffer: { D_x, D_y },
+      particles: { n, x_x, x_y, v_x, v_y, D_x, D_y },
       particleCollisionDetector,
       boundary,
     } = this;
@@ -123,11 +102,7 @@ export class Core {
 
     particleCollisionDetector.index();
     particleCollisionDetector.detect(
-      collideParticles.bind(
-        null,
-        this.particles,
-        this.particleDisplacementBuffer
-      )
+      collideParticles.bind(null, this.particles)
     );
 
     for (let i = 0; i < n; i++) {
