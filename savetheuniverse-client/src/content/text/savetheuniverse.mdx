@@ -1,0 +1,198 @@
+import { Link } from "react-router-dom";
+import { ParticleToyPseudoMomentum } from "../figures/ParticleToyPseudoMomentum";
+import { ParticleToyEntropy } from "../figures/ParticleToyEntropy";
+import { SimDesignTransfer } from "../figures/SimDesignTransfer";
+import { SimDesignCentripetal } from "../figures/SimDesignCentripetal";
+import { MeasuringInformation } from "../figures/MeasuringInformation";
+export const title = "Let Us Save the Universe!";
+export const subtitle =
+  "Challenging the validity of the second law of thermodynamics at scales imperceptible to current measurement techniques";
+export const byline = [
+  { label: "Author", value: "Ashton Six" },
+  { label: "Updated", value: "December 16, 2023" },
+];
+
+<div className="[grid-column-start:1] [grid-column-end:text-start] justify-self-end">
+	<nav className="toc">
+
+    ### Contents
+
+    - [Introduction](#introduction)
+    - [Defining pseudo-momentum](#pseudo-momentum)
+    - [Understanding disorder](#understanding-disorder)
+    - [Designing the simulation](#simulation)
+    - [Modelling an electron](#electron-model)
+    - [Scaling up](#scaling)
+    - [Experiments](#experiments)
+    - [The ascendent perspective](#ascendency)
+    - [Questions for further research](#questions)
+    - [Appendices](#appendices)
+    - <a href="#connect" className="text-[#005dff]">Connect to simulation server</a>
+
+  </nav>
+</div>
+
+<div>
+
+<div id="introduction">
+
+Across centuries of testing, from scales galactic to quantum, the second law of thermodynamics has stood seemingly invincible. It states heat flows only from where it is hot to where it is cold, foretelling a universe eventually bereft of temperature gradients. Without which all processes, including life, shall halt.
+
+In this research I introduce pseudo-momentum. A novel quantity that allows work to be performed even in the absence of pre-existing temperature gradients, violating the second law of thermodynamics. I hypothesize the conservation of this quantity supersedes the conservation of momentum at sub-quantum scales beyond our current observational capacity.
+
+I support this claim through a simulation, within which I create a quantum oscillator behaviourally identical to an electron. To further validate the simulation, I reproduce progressively larger entities including whole atoms, and culminating in the simulation of simple molecules like water and methane. By reproducing seminal experiments, such as the double-slit experiment, I affirm the simulation’s compatibility with special relativity and quantum mechanics.
+
+The inspiration for this research stemmed from the study of artificial neural networks, general systems theory, and theoretical ecology. I aim to paint an optimistic view of the universe’s ultimate destiny. And I envision applications for the work across fields such as nuclear energy and quantum computing.
+
+</div>
+
+<h2 id="pseudo-momentum">Introducing pseudo-momentum</h2>
+
+Under the conservation of pseudo-momentum, denoted $\boldsymbol{\rho}$, the direction of total momentum and magnitude of momentum $\|\mathbf{p}_1\| + \|\mathbf{p}_2\| = \|\mathbf{p}'_1\| + \|\mathbf{p}'_2\|$ are invariant.
+
+Let us consider a toy. While it does not model any known physical laws, the toy provides a clear demonstration of emergent behaviour related to pseudo-momentum. Particles follow straight-line paths at constant velocity. Collisions with the boundary are perfectly elastic, while particle-particle collisions are pseudo-elastic. All particles share equal mass.
+
+The equation governing particle-particle collisions is given by:
+
+$$
+\displaylines{
+	\mathbf{J} = \frac{(1 + E)(\mathbf{x}_1 - \mathbf{x}_2)}{2} \frac{\langle \mathbf{v}_1 - \mathbf{v}_2, \mathbf{x}_1 - \mathbf{x}_2\rangle}{\langle \mathbf{x}_1 - \mathbf{x}_2, \mathbf{x}_1 - \mathbf{x}_2\rangle}, \\
+	{\color{#005dff}S = \frac{\|\mathbf{v}_1\| + \|\mathbf{v}_2\|}{\|\mathbf{v}_1 - \mathbf{J}\| + \|\mathbf{v}_2 + \mathbf{J}\|}}, \\
+	\mathbf{v}'_1 = {\color{#005dff}S} (\mathbf{v}_1 - \mathbf{J}), \\
+	\mathbf{v}'_2 = {\color{#005dff}S} (\mathbf{v}_2 + \mathbf{J}),
+}
+$$
+
+where $\mathbf{x}$ and $\mathbf{v}$ denote position and velocity respectively, $\mathbf{J}$ is the impulse, $E$ is the coefficient of pseudo-elasticity, and ${\color{#005dff}S}$ is a scaling factor introduced to preserve pseudo-momentum. In the absence of ${\color{#005dff}S}$, the equation reduces to the classical particle-particle collision equation.
+
+At $E=1$, both momentum and pseudo-momentum are conserved. However, where $E \neq 1$, we must make a choice between momentum and pseudo-momentum. If we select pseudo-momentum the conservation of classical momentum $\mathbf{p}_1 + \mathbf{p}_2 = \mathbf{p}'_1 + \mathbf{p}'_2$ is forfeited.
+
+Let us interact with the toy and observe the effect of reducing the pseudo-elasticity:
+
+</div>
+
+<figure className="[grid-column:middle]">
+  <ParticleToyPseudoMomentum />
+</figure>
+
+For $E \lt 1$, particles’ velocities align, exhibiting emergent order within the closed system of our toy. Let us also try the experiment Maxwell’s Demon. In this experiment let us change the shape of the boundary, such that two chambers are separated by a valve that can act as a thermodynamic pump (or resistor when $E \ge 1$).
+
+<h2 id="understanding-disorder">Understanding disorder</h2>
+
+Let us consider entropy under classical physics. Let the toy have some microstate described by the positions $\mathbf{x}_i$ and velocities $\mathbf{v}_i$ of all particles, that is, a description of the state at the micro scale. Let the toy have a macrostate $\sum_{i} \; \mathbf{x}_i$, which describes the alignment of particle directions in aggregate. Let there be a phase space that represents all possible microstates for the toy.
+
+Let us look at a visualisation. On the right is a microstate. On the left is a projection of phase space, with macrostate and location of the displayed microstate indicated.
+
+<figure className="[grid-column:middle]">
+  <ParticleToyEntropy />
+</figure>
+
+For a given macrostate entropy is the log count of microstates that produce it, proportional to the volume of phase space the macrostate occupies. Entropy is associated with disorder because the vast majority of phase space (and thus microstates) are charachterised by independent variables like $[ 8 \, 3 \, 6 \, 0 \, 1 ]$ as opposed to entrained variables like $[ 7 \, 7 \, 7 \, 7 \, 7 ]$.
+
+Drawing an analogy, one who travels a straight line path through the desert shall trudge through more arid sand than lush oasis. We, humanity, are also constrained to follow a straight line path and from our starting position in an oasis of unusually low entropy it seems inevitable we will move towards the undesirable high entropy regions more typical of phase space as a whole.
+
+Entropy can move. Imagine proto-Earth, clearing its orbit of smaller bodies, simplifying the solar symphony. Each collision converts some kinetic entropy to thermal entropy. Such simplifications don't decrease entropy but merely transfer it.
+
+Entropy can be considered equivalent to (Kolmogorov) information in some contexts. As in, one byte has 256 possible configurations, and equivalently, a phase space with 256 possible microstates. Information is the length of the shortest possible description of a system.
+
+Let us illustrate by approximately measuring information using digital file compression:
+
+<figure className="[grid-column:middle]">
+  <MeasuringInformation />
+</figure>
+
+The file compression shown is reversible, as are all interactions where momentum is conserved. Trivially, no reversible mechanism permits discarding information. Additionally, as the information in a system increases the tempreature spreads out, erasing gradients. Consequently, the conservation of fundamental quantities in classical mechanics uphold the second law of thermodynamics.
+
+This is why we forfeit momentum $\mathbf{p}$ and adopt pseudo-momentum $\boldsymbol{\rho}$ in its place. Because pseudo-momentum conserving interactions are not necessarily reversible discarding information is permitted. The post-collision entrainment of variables in the particle toy causes a reduction in total information, forcing the system towards the simplest possible configuration stable within the system’s dynamics. We can exploit this process to perform work.
+
+<h2 id="simulation">Designing the simulation</h2>
+
+The simulation we use for experimentation is akin to cellular automaton like Conway's Game of Life, but with key differences. Instead of a binary state, each cell holds some pseudo-momentum . This pseudo-momentum propagates across the grid through transfers between neighbouring cells. To calculate a single update to the simulation state, we begin by considering the transfer of pseudo-momentum from one cell to another given by:
+
+$$
+\displaylines {
+  \mathbf{d} = \mathbf{x}_1 - \mathbf{x}_2, \\
+  \alpha = \cos\theta = \frac{\langle \mathbf{d}, \boldsymbol{\rho}_1 \rangle}{\|\mathbf{d}\| \|\boldsymbol{\rho}_1\| }, \\
+  \Delta\boldsymbol{\rho}_{1 \rightarrow 2} = \mathbf{\hat{d}} \cdot \|\boldsymbol{\rho}_1\| \cdot S \cdot X(d) \cdot D(\alpha),
+}
+$$
+
+The transfer $\Delta\boldsymbol{\rho}_{1 \rightarrow 2}$ depends on:
+
+<ol>
+  <li>
+    $S$, the scaling factor. Which preserves the conservation of
+    pseudo-momentum.
+  </li>
+  <li>
+    $X(d)$, the distance function. It's defined in terms of the neighbourhood
+    radius $r$ and normalised distance $d = \|\mathbf{d}\|/r$, and given as
+    $X(d) = \max(0, d - d^2)$.
+  </li>
+  <li>
+    $D(\alpha)$, the dispersion function. Defined as $D(\alpha)$
+    $-\delta\alpha^2+0.5\alpha+\delta+0.5$ where $\delta$ is the dispersion
+    factor and describes how much the pseudo-momentum will spread out.
+  </li>
+</ol>
+
+We visualise the transfers from one cell out to each of its neighbours $\Delta\boldsymbol{\rho}_{1 \rightarrow i}$ like so:
+
+<figure className="[grid-column:middle]">
+  <SimDesignTransfer />
+</figure>
+
+Taking all transfers a cell receives into account, $\boldsymbol{\rho}'_1$ is described by the pseudo-momentum conserving aggregation:
+
+$$
+\boldsymbol{\rho}'_1 = \left(\sum_{j} \; \|\Delta\boldsymbol{\rho}_{j \rightarrow 1}\|\right) \frac{\sum_{j} \; \Delta\boldsymbol{\rho}_{j \rightarrow 1}}{\left\|\sum_{j} \; \Delta\boldsymbol{\rho}_{j \rightarrow 1}\right\|}
+$$
+
+So we can interact with the simulation by, for example, applying forces and constraints, we introduce a vector $Q(t, \mathbf{x}_i)$. We take $Q(t, \mathbf{x}_i)$ into account after all pseudo-momentum transfers take place, which modifies the direction but not the magnitude of $\boldsymbol{\rho}'_i$ like so:
+
+$$
+\boldsymbol{\rho}''_i = \frac{Q(t, \mathbf{x}_i)+\boldsymbol{\hat{\rho}}'_i}{\|Q(t, \mathbf{x}_i)+\boldsymbol{\hat{\rho}}'_i\|}\|\boldsymbol{\rho}'_i\|
+$$
+
+Let us interact with the completed simulation and observe the effect of increasing the dispersion factor. Note that the visual contrast is dynamic:
+
+<figure className="[grid-column:middle]">
+  <SimDesignCentripetal />
+</figure>
+
+When $\delta \lt 0$, $\boldsymbol{\rho}$ propagates across the grid as if acted upon by centrifugal force, much like the particles in our toy. Conversely, when $\delta \gt 0$, $\boldsymbol{\rho}$ propagates across the grid as if acted upon by centripetal force and accumulates within the simulation's potential basins. We will call these accumulations of pseudo-momentum oscillators because, with motion amplification enabled, we can see that they oscillate.
+
+The grid’s spatial discretisation causes the simulation’s self-ordering behaviour by forcing information to be destroyed during $\boldsymbol{\rho}$-conserving aggregation. This is balanced by $\boldsymbol{\rho}$-propagation which creates information. Together, these opposing mechanisms form an “information density attractor”. The oscillating structures that can be created within the simulation correspond to the attractor’s local minima.
+
+The information density attractor is a pre-requisite for the conservation of pseudo-momentum to have plausibility at sub-quantum scales. With it, one approaches the conservation of information (and consequently momentum) as they zoom out, allowing recovery of these and time-reversiblity for all practical purposes.
+
+Our simulation design generalises to any dimensional space. To make optimising the simulation software easier we now fix the dimensionality to 3D, $\delta = 0.25$, $r = 5$, and $S = 0.00225672$.
+
+The maximum speed at which pseudo-momentum propagates, analogous to the speed of light, is governed by $X(d)$ and defined as $c = r / 2t$. Where $r$ and $t$ represent the neighbourhood radius and time per simulation update respectively.
+
+<h2 id="electron-model">Modelling an electron</h2>
+
+TODO
+
+<h2 id="scaling">Scaling up</h2>
+
+TODO
+
+<h2 id="experiments">Experiments</h2>
+
+TODO
+
+<h2 id="ascendency">The ascendent perspective</h2>
+
+TODO
+
+<h2 id="questions">Questions for further research</h2>
+
+TODO
+
+<h2 id="appendices">Appendices</h2>
+
+{/* prettier-ignore */}
+- <Link to="/particle-toy-standalone" className="text-[#005dff]">Appendix A.1</Link> — Particle Toy Standalone
+- <Link to="/particle-toy-notes" className="text-[#005dff]">Appendix A.2</Link> — Particle Toy Implementation
+  Notes

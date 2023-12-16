@@ -1,0 +1,124 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+.lil-gui.root {
+  position: absolute;
+  top: 0;
+  right: 15px;
+  z-index: 1001;
+}
+
+.math svg {
+  display: initial;
+}
+
+@layer components {
+  .layout {
+    display: grid;
+    /* prettier-ignore */
+    grid-template-columns:
+      [screen-start] 1fr
+      [page-start kicker-start] theme(spacing.16)
+      [middle-start] theme(spacing.16)
+      [text-start kicker-end] repeat(8, theme(spacing.16))
+      [text-end gutter-start] theme(spacing.16)
+      [middle-end] theme(spacing.16)
+      [page-end gutter-end] 1fr
+      [screen-end];
+    grid-column-gap: theme(spacing.8);
+  }
+
+  .layout > * {
+    grid-column: text;
+  }
+
+  @media (max-width: 72rem) {
+    .layout {
+      display: grid;
+      /* prettier-ignore */
+      grid-template-columns:
+        [screen-start] theme(spacing.8)
+        [middle-start] theme(spacing.16)
+        [text-start] 1fr
+        [text-end] theme(spacing.16)
+        [middle-end] theme(spacing.8)
+        [screen-end];
+      grid-column-gap: 0;
+    }
+
+    .toc {
+      @apply hidden;
+    }
+  }
+
+  @media (max-width: 768px) {
+    .layout {
+      display: grid;
+      /* prettier-ignore */
+      grid-template-columns:
+        [screen-start middle-start] theme(spacing.8)
+        [text-start] 1fr
+        [text-end] theme(spacing.8)
+        [middle-end screen-end];
+    }
+
+  }
+
+  .prose h2 {
+    @apply text-4xl font-bold border-b pb-4 mt-4 mb-6 leading-normal;
+  }
+
+  .prose h3 {
+    @apply text-xl font-bold mt-2 mb-4 leading-normal;
+  }
+
+  .prose ul, .prose ol {
+    @apply pl-6 mb-4;
+  }
+
+  .prose ul > li {
+    @apply list-disc mb-4;
+  }
+
+  .prose ol > li {
+    @apply list-decimal mb-4;
+  }
+
+  .prose ul > li:last-child, .prose ol > li:last-child {
+    @apply mb-0;
+  }
+
+  .prose p,
+  .prose .math-display {
+    @apply mb-4;
+  }
+
+  .prose figure {
+    @apply mb-8;
+  }
+
+  .toc {
+    @apply px-8 border-r;
+  }
+
+  .toc h3 {
+    @apply text-2xl font-bold text-gray-500 mb-6;
+  }
+
+  .toc ul {
+    @apply pl-0 mb-2;
+  }
+
+  .toc ul > li {
+    @apply list-none mb-2;
+  }
+
+  .toc ul > li:last-child {
+    @apply mb-0;
+  }
+
+  .toc a {
+    @apply hover:underline underline-offset-4;
+  }
+}
