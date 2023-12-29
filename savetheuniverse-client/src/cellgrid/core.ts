@@ -61,6 +61,7 @@ export class Core {
     for (let i = 0; i < sz * sz; i++) {
       total += state.buf_m[i];
     }
+    console.log(this.radius, total, this.dispersion);
     this.scalingFactor = 1 / total;
   }
   step(target = this) {

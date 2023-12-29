@@ -1,27 +1,26 @@
-CC = g++
-CFLAGS = -fPIC
-LDFLAGS = -shared
-LIBS = -l$(LIB_NAME)
-
+CUDA_PATH ?= /usr/local/cuda
 LIBJPEG_DIR ?= /usr
-LIB_NAME ?= turbojpeg
 
-LIB_DIR = $(LIBJPEG_DIR)/lib
-INCLUDE_DIR = $(LIBJPEG_DIR)/include
+LIBS = -ljpeg -lcudart
+LIB_DIRS = -L/usr/lib/x86_64-linux-gnu -L$(CUDA_PATH)/lib64
+INCLUDE_DIRS = -I$(LIBJPEG_DIR)/include -I$(CUDA_PATH)/include
 
-TARGET = videotest.so
-SOURCE = videotest.cpp
+TARGET = lib.so
+SOURCES = $(wildcard src/*.cu)
 
 all: $(TARGET)
 
-$(TARGET): $(SOURCE)
-	$(CC) $(CFLAGS) $(LDFLAGS) -L$(LIB_DIR) -I$(INCLUDE_DIR) $(LIBS) -o $@ $^
+dev: FLAGS += -DDEVELOPMENT
+dev: $(TARGET)
+
+$(TARGET): $(SOURCES)
+	nvcc -Xcompiler -fPIC -shared $(FLAGS) $(LIB_DIRS) $(INCLUDE_DIRS) $(LIBS) -o $@ $(SOURCES)
 
 clean:
 	rm -f $(TARGET)
 
 help:
-	@echo "Usage: make [all|clean|help]"
+	@echo "Usage: make [all|dev|clean|help]"
 	@echo "Environment variables:"
 	@echo "  LIBJPEG_DIR - Directory where libjpeg-turbo is installed (default: /usr)"
-	@echo "  LIB_NAME    - Name of the libjpeg-turbo library (default: turbojpeg)"
+	@echo "  CUDA_PATH   - Path to the CUDA installation (default: /usr/local/cuda)"

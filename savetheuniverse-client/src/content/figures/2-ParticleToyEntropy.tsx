@@ -5,10 +5,10 @@ import { Button, Slider } from "../ui/FigureControls";
 import { Image } from "../../particles/boundary-image";
 import { SDF } from "../../particles/boundary";
 import { Link } from "react-router-dom";
-import { LayoutStandalone } from "../text/appendix-a-particle-toy-standalone";
 import Canvas from "../../common/canvas";
 import { allXY } from "../../common/grid-utils";
 import { ParticleCollection } from "../../particles/particles";
+import { LayoutStandalone } from "../ui/Layout";
 
 const { min, max, floor, abs, sin, cos, E, PI } = Math;
 

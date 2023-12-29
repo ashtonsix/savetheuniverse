@@ -2,12 +2,13 @@ import "./style.css";
 import "katex/dist/katex.min.css";
 import ReactDOM from "react-dom/client";
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
-import { LayoutProse } from "./content/ui/LayoutProse";
+import { LayoutProse } from "./content/ui/Layout";
 import * as SaveTheUniverse from "./content/text/savetheuniverse.mdx";
 import AppendixA1 from "./content/text/appendix-a-particle-toy-standalone";
 import * as AppendixA2 from "./content/text/appendix-a-particle-toy-notes.mdx";
-import { ParticleToyEntropyPage } from "./content/figures/ParticleToyEntropy";
-import { SimVideoOutput } from "./content/figures/SimVideoOutput";
+import { ParticleToyEntropyPage } from "./content/figures/2-ParticleToyEntropy";
+import { SimVideoOutput } from "./content/figures/X-SimVideoOutput";
+import { ComputeScalingFactorPage } from "./content/figures/X-ComputeScalingFactor";
 
 const router = createBrowserRouter([
   {
@@ -39,6 +40,7 @@ const router = createBrowserRouter([
       </LayoutProse>
     ),
   },
+  { path: "/compute-scaling-factor", element: <ComputeScalingFactorPage /> },
   { path: "/sim-video", element: <SimVideoOutput /> },
 ]);
 

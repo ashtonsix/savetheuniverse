@@ -1,9 +1,9 @@
 import { Link } from "react-router-dom";
-import { ParticleToyPseudoMomentum } from "../figures/ParticleToyPseudoMomentum";
-import { ParticleToyEntropy } from "../figures/ParticleToyEntropy";
-import { SimDesignTransfer } from "../figures/SimDesignTransfer";
-import { SimDesignCentripetal } from "../figures/SimDesignCentripetal";
-import { MeasuringInformation } from "../figures/MeasuringInformation";
+import { ParticleToyPseudoMomentum } from "../figures/1-ParticleToyPseudoMomentum";
+import { ParticleToyEntropy } from "../figures/2-ParticleToyEntropy";
+import { MeasuringInformation } from "../figures/3-MeasuringInformation";
+import { SimDesignTransfer } from "../figures/4-SimDesignTransfer";
+import { SimDesignCentripetal } from "../figures/5-SimDesignCentripetal";
 export const title = "Let Us Save the Universe!";
 export const subtitle =
   "Challenging the validity of the second law of thermodynamics at scales imperceptible to current measurement techniques";
@@ -107,7 +107,7 @@ This is why we forfeit momentum $\mathbf{p}$ and adopt pseudo-momentum $\boldsym
 
 <h2 id="simulation">Designing the simulation</h2>
 
-The simulation we use for experimentation is akin to cellular automaton like Conway's Game of Life, but with key differences. Instead of a binary state, each cell holds some pseudo-momentum . This pseudo-momentum propagates across the grid through transfers between neighbouring cells. To calculate a single update to the simulation state, we begin by considering the transfer of pseudo-momentum from one cell to another given by:
+The simulation we use for experimentation is akin to cellular automaton like Conway's Game of Life, but with key differences. Instead of a binary state, each cell holds some pseudo-momentum. This pseudo-momentum propagates across the grid through transfers between neighbouring cells. To calculate a single update to the simulation state, we begin by considering the transfer of pseudo-momentum from one cell to another given by:
 
 $$
 \displaylines {
@@ -166,7 +166,7 @@ The grid’s spatial discretisation causes the simulation’s self-ordering beha
 
 The information density attractor is a pre-requisite for the conservation of pseudo-momentum to have plausibility at sub-quantum scales. With it, one approaches the conservation of information (and consequently momentum) as they zoom out, allowing recovery of these and time-reversiblity for all practical purposes.
 
-Our simulation design generalises to any dimensional space. To make optimising the simulation software easier we now fix the dimensionality to 3D, $\delta = 0.25$, $r = 5$, and $S = 0.00225672$.
+Our simulation design generalises to any dimensional space. To make optimising the simulation software easier we now fix the dimensionality to 3D, $\delta = 0.25$, $r = 5$, and $S = 0.00225672$, with toroidal boundaries.
 
 The maximum speed at which pseudo-momentum propagates, analogous to the speed of light, is governed by $X(d)$ and defined as $c = r / 2t$. Where $r$ and $t$ represent the neighbourhood radius and time per simulation update respectively.
 
