@@ -1,9 +1,5 @@
 import { Link } from "react-router-dom";
 import { LayoutStandalone } from "../ui/Layout";
-
-//  0.25 5 8.041779180868684
-// -0.1  5 5.790081010225453
-// -0.25 5 4.8250675085212125
 import { useState } from "react";
 
 export const ComputeScalingFactor = () => {

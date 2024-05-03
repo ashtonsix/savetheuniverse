@@ -380,6 +380,7 @@ export const ParticleToyEntropy = ({
   const simContainer = useRef(null);
   const phaseSpaceVizContainer = useRef(null);
   const [initialTheta, setInitialTheta] = useState(INITIAL_THETA);
+  const [initialPolar, setInitialPolar] = useState(1);
   const [particleToy, setParticleToy] = useState<ParticleToyEntropyImpl | null>(
     null
   );
@@ -461,7 +462,18 @@ export const ParticleToyEntropy = ({
           max={PI}
           step={PI / (THETA_SAMPLES / 2)}
         >
-          Initial particle heading: {initialTheta.toFixed(2)}
+          {/* TODO: make (1, x) selectable */}
+          Initial phase space coordinates: ({initialPolar}{" "}
+          <input
+            type="checkbox"
+            className="relative top-[1px]"
+            checked={!!initialPolar}
+            onChange={(e) => {
+              setInitialPolar(e.target.checked ? 1 : 0);
+              // if (particleToy) particleToy.onUpdateInitialPolar(e.target.checked);
+            }}
+          />
+          , {initialTheta.toFixed(2)})
         </Slider>
       </div>
     </div>

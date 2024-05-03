@@ -180,7 +180,7 @@ export const MeasuringInformation = () => {
               setExample(example);
             }}
           >
-            Experiment:
+            Example:
           </Dropdown>
         </div>
         <div>

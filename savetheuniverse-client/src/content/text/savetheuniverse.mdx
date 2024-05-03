@@ -9,7 +9,7 @@ export const subtitle =
   "Challenging the validity of the second law of thermodynamics at scales imperceptible to current measurement techniques";
 export const byline = [
   { label: "Author", value: "Ashton Six" },
-  { label: "Updated", value: "December 16, 2023" },
+  { label: "Updated", value: "May 3, 2024" },
 ];
 
 <div className="[grid-column-start:1] [grid-column-end:text-start] justify-self-end">
@@ -21,11 +21,7 @@ export const byline = [
     - [Defining pseudo-momentum](#pseudo-momentum)
     - [Understanding disorder](#understanding-disorder)
     - [Designing the simulation](#simulation)
-    - [Modelling an electron](#electron-model)
-    - [Scaling up](#scaling)
-    - [Experiments](#experiments)
-    - [The ascendent perspective](#ascendency)
-    - [Questions for further research](#questions)
+    - [Experiments with oscillators](#experiments-with-oscillators)
     - [Appendices](#appendices)
     - <a href="#connect" className="text-[#005dff]">Connect to simulation server</a>
 
@@ -40,7 +36,7 @@ Across centuries of testing, from scales galactic to quantum, the second law of 
 
 In this research I introduce pseudo-momentum. A novel quantity that allows work to be performed even in the absence of pre-existing temperature gradients, violating the second law of thermodynamics. I hypothesize the conservation of this quantity supersedes the conservation of momentum at sub-quantum scales beyond our current observational capacity.
 
-I support this claim through a simulation, within which I create a quantum oscillator behaviourally identical to an electron. To further validate the simulation, I reproduce progressively larger entities including whole atoms, and culminating in the simulation of simple molecules like water and methane. By reproducing seminal experiments, such as the double-slit experiment, I affirm the simulation’s compatibility with special relativity and quantum mechanics.
+I support this claim through a simulation, within which I create a quantum oscillator behaviourally identical to an electron. To further validate the simulation, I reproduce progressively larger entities including whole atoms, and culminating with simple molecules like water and methane. By reproducing seminal experiments, such as the double-slit experiment, I affirm the simulation’s compatibility with special relativity and quantum mechanics.
 
 The inspiration for this research stemmed from the study of artificial neural networks, general systems theory, and theoretical ecology. I aim to paint an optimistic view of the universe’s ultimate destiny. And I envision applications for the work across fields such as nuclear energy and quantum computing.
 
@@ -79,7 +75,7 @@ For $E \lt 1$, particles’ velocities align, exhibiting emergent order within t
 
 <h2 id="understanding-disorder">Understanding disorder</h2>
 
-Let us consider entropy under classical physics. Let the toy have some microstate described by the positions $\mathbf{x}_i$ and velocities $\mathbf{v}_i$ of all particles, that is, a description of the state at the micro scale. Let the toy have a macrostate $\sum_{i} \; \mathbf{x}_i$, which describes the alignment of particle directions in aggregate. Let there be a phase space that represents all possible microstates for the toy.
+Let us consider entropy under classical physics. Let the toy have some microstate described by the positions $\mathbf{x}_i$ and velocities $\mathbf{v}_i$ of all particles, that is, a description of the state at the micro scale. Let the toy have a macrostate $\|\sum_{i} \; \mathbf{v}_i\|$, which describes the alignment of particle directions in aggregate. Let there be a phase space that represents all possible microstates for the toy.
 
 Let us look at a visualisation. On the right is a microstate. On the left is a projection of phase space, with macrostate and location of the displayed microstate indicated.
 
@@ -87,13 +83,11 @@ Let us look at a visualisation. On the right is a microstate. On the left is a p
   <ParticleToyEntropy />
 </figure>
 
-For a given macrostate entropy is the log count of microstates that produce it, proportional to the volume of phase space the macrostate occupies. Entropy is associated with disorder because the vast majority of phase space (and thus microstates) are charachterised by independent variables like $[ 8 \, 3 \, 6 \, 0 \, 1 ]$ as opposed to entrained variables like $[ 7 \, 7 \, 7 \, 7 \, 7 ]$.
+Microstates are points in phase space, and macrostates are volumes. The log count of microstates corresponding to a macrostate defines both its entropy and log volume. Large macrostates are high entropy, associated with disorder, occupy the vast majority of phase space, and are characterized by independent variables like $[ 8 \, 3 \, 6 \, 0 \, 1 ]$, while entrained variables like $[ 7 \, 7 \, 7 \, 7 \, 7 ]$ characterize small low entropy macrostates.
 
-Drawing an analogy, one who travels a straight line path through the desert shall trudge through more arid sand than lush oasis. We, humanity, are also constrained to follow a straight line path and from our starting position in an oasis of unusually low entropy it seems inevitable we will move towards the undesirable high entropy regions more typical of phase space as a whole.
+Drawing an analogy, one who travels a straight line path through the endless desert shall trudge through more arid sand than lush oasis. We, humanity, are also constrained to follow a straight line path and from our starting position in an oasis of unusually low entropy it seems inevitable we will move towards the undesirable high entropy regions more typical of phase space as a whole.
 
-Entropy can move. Imagine proto-Earth, clearing its orbit of smaller bodies, simplifying the solar symphony. Each collision converts some kinetic entropy to thermal entropy. Such simplifications don't decrease entropy but merely transfer it.
-
-Entropy can be considered equivalent to (Kolmogorov) information in some contexts. As in, one byte has 256 possible configurations, and equivalently, a phase space with 256 possible microstates. Information is the length of the shortest possible description of a system.
+Entropy can be considered equivalent to (Kolmogorov) information in some contexts. As in, one byte has 256 possible configurations, and equivalently, a phase space with 256 possible microstates. Information is the length of the shortest possible description of a system. Like entropy, its density correlates with disorder and variable independence.
 
 Let us illustrate by approximately measuring information using digital file compression:
 
@@ -101,7 +95,9 @@ Let us illustrate by approximately measuring information using digital file comp
   <MeasuringInformation />
 </figure>
 
-The file compression shown is reversible, as are all interactions where momentum is conserved. Trivially, no reversible mechanism permits discarding information. Additionally, as the information in a system increases the tempreature spreads out, erasing gradients. Consequently, the conservation of fundamental quantities in classical mechanics uphold the second law of thermodynamics.
+The file compression shown is reversible, as are all interactions where momentum is conserved. Trivially, no reversible mechanism permits discarding information, nor entropy or disorder. Consequently, the conservation of fundamental quantities in classical mechanics uphold the second law of thermodynamics.
+
+Only local reductions in entropy occur under classical mechanics. Imagine proto-Earth, clearing its orbit of smaller bodies, simplifying the solar symphony. Each collision converts some kinetic entropy to thermal entropy. Such simplifications don't decrease entropy but merely transfer it.
 
 This is why we forfeit momentum $\mathbf{p}$ and adopt pseudo-momentum $\boldsymbol{\rho}$ in its place. Because pseudo-momentum conserving interactions are not necessarily reversible discarding information is permitted. The post-collision entrainment of variables in the particle toy causes a reduction in total information, forcing the system towards the simplest possible configuration stable within the system’s dynamics. We can exploit this process to perform work.
 
@@ -130,8 +126,7 @@ The transfer $\Delta\boldsymbol{\rho}_{1 \rightarrow 2}$ depends on:
     $X(d) = \max(0, d - d^2)$.
   </li>
   <li>
-    $D(\alpha)$, the dispersion function. Defined as $D(\alpha)$
-    $-\delta\alpha^2+0.5\alpha+\delta+0.5$ where $\delta$ is the dispersion
+    $D(\alpha)$, the dispersion function. Defined as $D(\alpha) = -\delta\alpha^2+0.5\alpha+\delta+0.5$ where $\delta$ is the dispersion
     factor and describes how much the pseudo-momentum will spread out.
   </li>
 </ol>
@@ -162,33 +157,17 @@ Let us interact with the completed simulation and observe the effect of increasi
 
 When $\delta \lt 0$, $\boldsymbol{\rho}$ propagates across the grid as if acted upon by centrifugal force, much like the particles in our toy. Conversely, when $\delta \gt 0$, $\boldsymbol{\rho}$ propagates across the grid as if acted upon by centripetal force and accumulates within the simulation's potential basins. We will call these accumulations of pseudo-momentum oscillators because, with motion amplification enabled, we can see that they oscillate.
 
-The grid’s spatial discretisation causes the simulation’s self-ordering behaviour by forcing information to be destroyed during $\boldsymbol{\rho}$-conserving aggregation. This is balanced by $\boldsymbol{\rho}$-propagation which creates information. Together, these opposing mechanisms form an “information density attractor”. The oscillating structures that can be created within the simulation correspond to the attractor’s local minima.
+The grid’s spatial discretisation causes the simulation’s self-ordering behaviour by forcing information to be destroyed during $\boldsymbol{\rho}$-conserving aggregation. This is balanced by $\boldsymbol{\rho}$-propagation which creates information. We hypothesize that, at sufficient scale and for all practical purposes, the balance of these mechanisms allows the conservation of information to be recovered and, in consequence, time-reversibility and momentum also.
 
-The information density attractor is a pre-requisite for the conservation of pseudo-momentum to have plausibility at sub-quantum scales. With it, one approaches the conservation of information (and consequently momentum) as they zoom out, allowing recovery of these and time-reversiblity for all practical purposes.
-
-Our simulation design generalises to any dimensional space. To make optimising the simulation software easier we now fix the dimensionality to 3D, $\delta = 0.25$, $r = 5$, and $S = 0.00225672$, with toroidal boundaries.
+Our simulation design generalises to any dimensional space. To make optimising the simulation software easier we now fix the dimensionality to 3D, $\delta = 0.25$, $r = 5$, and $S = 0.01916889$, with toroidal boundaries.
 
 The maximum speed at which pseudo-momentum propagates, analogous to the speed of light, is governed by $X(d)$ and defined as $c = r / 2t$. Where $r$ and $t$ represent the neighbourhood radius and time per simulation update respectively.
 
-<h2 id="electron-model">Modelling an electron</h2>
+<h2 id="experiments-with-oscillators">Experiments with oscillators</h2>
 
-TODO
+WORK-IN-PROGRESS
 
-<h2 id="scaling">Scaling up</h2>
-
-TODO
-
-<h2 id="experiments">Experiments</h2>
-
-TODO
-
-<h2 id="ascendency">The ascendent perspective</h2>
-
-TODO
-
-<h2 id="questions">Questions for further research</h2>
-
-TODO
+{/* TODO: More sections */}
 
 <h2 id="appendices">Appendices</h2>
 
